@@ -24,5 +24,6 @@ jobs:
     - run: node -v
     - run: npm -v
     - run: npm ci
+    - run: cd installer && npm ci && cd ..
     - run: npm run lint
     - run: npm t
