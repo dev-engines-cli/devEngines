@@ -17,8 +17,6 @@ import {
   supportedTools
 } from './helpers.js';
 
-const __dirname = import.meta.dirname;
-
 /**
  * Recursively looks for the package.json file in the current directory
  * and each parent directory until it finds it, hits the system root,

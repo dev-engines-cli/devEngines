@@ -6,6 +6,8 @@ import { join } from 'node:path';
 
 import { getGlobalToolVersions } from '@/globalTools.js';
 
+const __dirname = import.meta.dirname;
+
 describe('globalTools.js', () => {
   describe('getGlobalToolVersions', () => {
     test('Returns the global versions', () => {
