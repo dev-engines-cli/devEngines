@@ -5,6 +5,7 @@
 import { getCliVersion } from './cliVersion.js';
 import { showHelpMenu } from './helpMenu.js';
 import { supportedTools } from './helpers.js';
+import { setToolInDevEngines } from './manifestUtilities.js';
 import node from './tools/node.js';
 import npm from './tools/npm.js';
 import unsupported from './tools/unsupportedTool.js';
@@ -33,7 +34,8 @@ const updateTool = async function (tool, version) {
   let desiredVersion = version;
   let resolvedVersion = await toolHelpers.resolveVersion(desiredVersion);
   console.log('Pin local ' + titleCase + ' to ' + resolvedVersion);
-  // TODO: Update the version in the package.json:devEngines
+  // TODO: Uncomment once mock-fs in tests
+  // setToolInDevEngines(tool, version);
 };
 
 /**
@@ -71,9 +73,8 @@ export const run = async function (isGlobal, arg) {
     console.log('devEngines ' + getCliVersion());
   } else if (['lts', 'latest'].includes(arg)) {
     await updateAllTools(arg);
-  } else if (arg.split('@').length) {
-    let name = arg.split('@')[0];
-    let version = arg.split('@')[1];
+  } else if (arg.includes('@')) {
+    const [name, version] = arg.split('@');
     if (supportedTools.includes(name) && version) {
       await updateTool(name, version);
     } else {

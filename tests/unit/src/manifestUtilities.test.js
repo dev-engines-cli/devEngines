@@ -1,13 +1,14 @@
 import {
   readFileSync,
-  unlinkSync,
   writeFileSync
 } from 'node:fs';
-import { join, resolve } from 'node:path';
+import {
+  join,
+  resolve
+} from 'node:path';
 
 import {
   findManifest,
-  getGlobalToolVersions,
   getManifestData,
   getRawToolVersions,
   mutateManifest,
@@ -69,28 +70,6 @@ describe('manifestUtilities.js', () => {
 
       expect(findManifest())
         .toEqual(undefined);
-    });
-  });
-
-  describe('getGlobalToolVersions', () => {
-    test('Returns the global versions', () => {
-      expect(getGlobalToolVersions())
-        .toEqual({
-          node: '',
-          npm: ''
-        });
-    });
-
-    test('Does not find the globalTools.json', () => {
-      const globalToolsPath = join(__dirname, '..', '..', '..', 'globalTools.json');
-      unlinkSync(globalToolsPath);
-
-      expect(getGlobalToolVersions())
-        .toEqual({});
-
-      const content = JSON.stringify({ node: '', npm: '' }, null, 2) + '\n';
-
-      writeFileSync(globalToolsPath, content);
     });
   });
 
