@@ -28,6 +28,7 @@ const config = [
     languageOptions: {
       ecmaVersion: 2026,
       globals: {
+        Bun: true,
         vi: true
       }
     },
