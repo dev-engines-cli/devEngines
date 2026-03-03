@@ -4,13 +4,15 @@
 
 import {
   existsSync,
-  readFileSync
+  readFileSync,
+  writeFileSync
 } from 'node:fs';
 import { join } from 'node:path';
 
 import { supportedTools } from './helpers.js';
 
 const __dirname = import.meta.dirname;
+const globalToolsPath = join(__dirname, '..', 'globalTools.json');
 
 /**
  * @typedef  {object} GLOBALTOOLS
@@ -28,7 +30,6 @@ const __dirname = import.meta.dirname;
  * @return {GLOBALTOOLS} The user's global versions for tools.
  */
 export const getGlobalToolVersions = function () {
-  const globalToolsPath = join(__dirname, '..', 'globalTools.json');
   let globalToolsExist = false;
   try {
     globalToolsExist = existsSync(globalToolsPath);
@@ -60,4 +61,21 @@ export const getGlobalToolVersions = function () {
     }
   }
   return globalTools;
+};
+
+/** @typedef {'bun'|'deno'|'node'|'npm'|'pnpm'|'yarn'} TOOL */
+
+/**
+ * Updates a tool's version number in the globalTools.json.
+ *
+ * @param {TOOL}   tool     The tool name to set
+ * @param {string} version  The resolved version number
+ */
+export const setGlobalToolVersion = function (tool, version) {
+  const globalTools = getGlobalToolVersions();
+  if (Object.keys(globalTools).includes(tool)) {
+    globalTools[tool] = version;
+    const data = JSON.stringify(globalTools, null, 2) + '\n';
+    writeFileSync(globalToolsPath, data);
+  }
 };
