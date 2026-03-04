@@ -1,7 +1,12 @@
 import { helpMessage } from '@/helpMenu.js';
 import { run, updateAllTools } from '@/run.js';
 
-import { CLI_VERSION, HELP_MENU } from '@@/data/constants.js';
+import {
+  CLI_VERSION,
+  HELP_MENU,
+  LATEST_NODE
+} from '@@/data/constants.js';
+import { resetGlobalToolsFile } from '@@/unit/testHelpers.js';
 
 describe('run.js', () => {
   describe('run', () => {
@@ -17,7 +22,10 @@ describe('run.js', () => {
         await run(true, 'node@latest');
 
         expect(console.log)
-          .toHaveBeenCalledWith('Global install of node@latest');
+          .toHaveBeenCalledWith('Successfully updated global Node version to ' + LATEST_NODE);
+
+        // TODO: Remove after mocking fs
+        resetGlobalToolsFile();
       });
     });
 
@@ -74,7 +82,7 @@ describe('run.js', () => {
         await run(false, 'node@latest');
 
         expect(console.log)
-          .toHaveBeenCalledWith('Pin local Node to 25.7.0');
+          .toHaveBeenCalledWith('Pin local Node to ' + LATEST_NODE);
       });
 
       test('Run devEngines node@', async () => {

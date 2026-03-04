@@ -16,6 +16,9 @@ const config = defineConfig({
   },
   test: {
     coverage: {
+      exclude: [
+        './src/types.js'
+      ],
       include: [
         './src/**/*'
       ],

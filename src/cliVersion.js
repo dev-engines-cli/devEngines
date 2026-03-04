@@ -16,6 +16,7 @@ const __dirname = import.meta.dirname;
 export const getCliVersion = function (forceThrow) {
   let version;
   try {
+    // TODO: Remove when mock-fs working in tests
     if (forceThrow) {
       throw 'error';
     }
