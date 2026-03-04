@@ -70,20 +70,20 @@ describe('globalTools.js', () => {
 
     test('Sets the versions of each tool', () => {
       setGlobalToolVersion('bun', '1.0.0');
-      setGlobalToolVersion('deno', '1.0.0');
-      setGlobalToolVersion('node', '1.0.0');
-      setGlobalToolVersion('npm', '1.0.0');
-      setGlobalToolVersion('pnpm', '1.0.0');
-      setGlobalToolVersion('yarn', '1.0.0');
+      setGlobalToolVersion('deno', '2.0.0');
+      setGlobalToolVersion('node', '3.0.0');
+      setGlobalToolVersion('npm', '4.0.0');
+      setGlobalToolVersion('pnpm', '5.0.0');
+      setGlobalToolVersion('yarn', '6.0.0');
 
       expect(JSON.parse(readFileSync(globalToolsPath)))
         .toEqual({
           bun: '1.0.0',
-          deno: '1.0.0',
-          node: '1.0.0',
-          npm: '1.0.0',
-          pnpm: '1.0.0',
-          yarn: '1.0.0'
+          deno: '2.0.0',
+          node: '3.0.0',
+          npm: '4.0.0',
+          pnpm: '5.0.0',
+          yarn: '6.0.0'
         });
     });
   });

@@ -11,6 +11,7 @@ import axios from 'axios';
 
 import node from '@/tools/node.js';
 
+import { LATEST_NODE } from '@@/data/constants.js';
 import { error } from '@@/data/error.js';
 
 const __dirname = import.meta.dirname;
@@ -109,7 +110,7 @@ describe('node.js', () => {
       const result = await node.resolveVersion('latest');
 
       expect(result)
-        .toMatchInlineSnapshot('"25.7.0"');
+        .toEqual(LATEST_NODE);
     });
 
     test('Returns the LTS Node version', async () => {

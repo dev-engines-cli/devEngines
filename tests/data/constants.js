@@ -2,6 +2,7 @@
  * @file Reusable test constants
  */
 
+export const LATEST_NODE = '25.8.0';
 export const CLI_VERSION = 'v0.0.1';
 export const HELP_MENU = [
   'devEngines CLI ' + CLI_VERSION,

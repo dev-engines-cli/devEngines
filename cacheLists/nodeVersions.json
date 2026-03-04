@@ -1,6 +1,30 @@
 {
-  "date": 1771986967480,
+  "date": 1772629806758,
   "data": [
+    {
+      "version": "25.8.0",
+      "date": "2026-03-03",
+      "files": [
+        "aix-ppc64",
+        "headers",
+        "linux-arm64",
+        "linux-ppc64le",
+        "linux-s390x",
+        "linux-x64",
+        "osx-arm64-tar",
+        "osx-x64-pkg",
+        "osx-x64-tar",
+        "src",
+        "win-arm64-7z",
+        "win-arm64-zip",
+        "win-x64-7z",
+        "win-x64-exe",
+        "win-x64-msi",
+        "win-x64-zip"
+      ],
+      "npm": "11.11.0",
+      "lts": false
+    },
     {
       "version": "25.7.0",
       "date": "2026-02-24",
