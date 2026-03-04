@@ -9,7 +9,12 @@ import {
 } from 'node:fs';
 import { join } from 'node:path';
 
-import { supportedTools } from './helpers.js';
+import {
+  getToolTitleCase,
+  supportedTools
+} from './helpers.js';
+
+/** @typedef {import('./types.js').TOOL} TOOL */
 
 const __dirname = import.meta.dirname;
 const globalToolsPath = join(__dirname, '..', 'globalTools.json');
@@ -63,8 +68,6 @@ export const getGlobalToolVersions = function () {
   return globalTools;
 };
 
-/** @typedef {'bun'|'deno'|'node'|'npm'|'pnpm'|'yarn'} TOOL */
-
 /**
  * Updates a tool's version number in the globalTools.json.
  *
@@ -76,6 +79,13 @@ export const setGlobalToolVersion = function (tool, version) {
   if (Object.keys(globalTools).includes(tool)) {
     globalTools[tool] = version;
     const data = JSON.stringify(globalTools, null, 2) + '\n';
-    writeFileSync(globalToolsPath, data);
+    const title = getToolTitleCase(tool);
+    try {
+      writeFileSync(globalToolsPath, data);
+      console.log('Successfully updated global ' + title + ' version to ' + version);
+    } catch (error) {
+      console.log('Error setting ' + title + ' to ' + version + ' in:\n' + globalToolsPath);
+      console.log(error);
+    }
   }
 };

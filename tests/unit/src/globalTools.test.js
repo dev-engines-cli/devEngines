@@ -1,34 +1,22 @@
 import {
   readFileSync,
-  unlinkSync,
-  writeFileSync
+  unlinkSync
 } from 'node:fs';
-import { join } from 'node:path';
 
 import {
   getGlobalToolVersions,
   setGlobalToolVersion
 } from '@/globalTools.js';
 
-const __dirname = import.meta.dirname;
-const globalToolsPath = join(__dirname, '..', '..', '..', 'globalTools.json');
-
-const dummyData = Object.freeze({
-  node: '25.0.0',
-  npm: '11.0.0'
-});
-
-/**
- * Resets the data in the globalTools.json file.
- * TODO: Remove after mock-fs setup.
- */
-function resetGlobalToolsFile () {
-  const content = JSON.stringify(dummyData, null, 2) + '\n';
-  writeFileSync(globalToolsPath, content);
-}
+import {
+  globalToolsPath,
+  globalToolsDummyData,
+  resetGlobalToolsFile
+} from '@@/unit/testHelpers.js';
 
 describe('globalTools.js', () => {
   afterEach(() => {
+    // TODO: remove after mock-fs setup
     resetGlobalToolsFile();
   });
 
@@ -38,8 +26,8 @@ describe('globalTools.js', () => {
         .toEqual({
           bun: '',
           deno: '',
-          node: dummyData.node,
-          npm: dummyData.npm,
+          node: globalToolsDummyData.node,
+          npm: globalToolsDummyData.npm,
           pnpm: '',
           yarn: ''
         });
@@ -65,7 +53,7 @@ describe('globalTools.js', () => {
       setGlobalToolVersion('asdf', '1.0.0');
 
       expect(JSON.parse(readFileSync(globalToolsPath)))
-        .toEqual(dummyData);
+        .toEqual(globalToolsDummyData);
     });
 
     test('Sets the versions of each tool', () => {

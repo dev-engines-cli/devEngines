@@ -7,6 +7,8 @@ import {
   readFileSync
 } from 'node:fs';
 
+/** @typedef {import('./types.js').TOOL} TOOL */
+
 /**
  * Detects CRLF, CR, or LF line endings in a string and
  * returns what it found.
@@ -91,6 +93,25 @@ export const loadJsonFile = function (filePath) {
     }
   }
   return data;
+};
+
+/**
+ * Takes in a lowercase tool name and returns it as the officially
+ * cased brand orthography.
+ *
+ * @param  {TOOL}   tool  Lowercase tool name
+ * @return {string}       Title case tool name
+ */
+export const getToolTitleCase = function (tool) {
+  const titleMap = {
+    bun: 'Bun',
+    deno: 'Deno',
+    node: 'Node',
+    npm: 'npm',
+    pnpm: 'PNPM',
+    yarn: 'Yarn'
+  };
+  return titleMap[tool] || tool;
 };
 
 /**
