@@ -17,8 +17,6 @@ import {
   supportedTools
 } from './helpers.js';
 
-const __dirname = import.meta.dirname;
-
 /**
  * Recursively looks for the package.json file in the current directory
  * and each parent directory until it finds it, hits the system root,
@@ -54,44 +52,6 @@ export const findManifest = function (cwd, attempt) {
     return undefined;
   }
   return findManifest(newCwd, attempt - 1);
-};
-
-/**
- * @typedef  {object} GLOBALTOOLS
- * @property {string} [node]       The global Node version, if set
- * @property {string} [npm]        The global npm version, if set
- */
-
-/**
- * Returns the global tool version user settings, if possible.
- *
- * @return {GLOBALTOOLS} The user's global versions for tools.
- */
-export const getGlobalToolVersions = function () {
-  const globalToolsPath = join(__dirname, '..', 'globalTools.json');
-  let globalToolsExist = false;
-  try {
-    globalToolsExist = existsSync(globalToolsPath);
-  } catch {
-    // do nothing
-  }
-  let globalTools;
-  if (globalToolsExist) {
-    try {
-      globalTools = readFileSync(globalToolsPath);
-      globalTools = JSON.parse(globalTools);
-    } catch {
-      // do nothing
-    }
-  }
-
-  if (
-    globalTools &&
-    typeof(globalTools) === 'object'
-  ) {
-    return globalTools;
-  }
-  return {};
 };
 
 /**
@@ -165,7 +125,7 @@ export const getManifestData = function () {
 export const getRawToolVersions = function () {
   const { manifest } = getManifestData();
   let versions = {};
-  function setVersionForDevEngine (type) {
+  function setVersionFromDevEngines (type) {
     if (
       manifest?.devEngines &&
       manifest.devEngines[type]
@@ -184,8 +144,8 @@ export const getRawToolVersions = function () {
       }
     }
   }
-  setVersionForDevEngine('runtime');
-  setVersionForDevEngine('packageManager');
+  setVersionFromDevEngines('runtime');
+  setVersionFromDevEngines('packageManager');
   return versions;
 };
 
@@ -248,7 +208,7 @@ const setDevEnginesSubSection = function (subSection, name, version) {
     return;
   }
   mutateManifest(manifest, subSection, name, version);
-  let mutatedManifest = JSON.stringify(manifest, null, indentation);
+  let mutatedManifest = JSON.stringify(manifest, null, indentation) + '\n';
   mutatedManifest = mutatedManifest.replaceAll('\n', eol);
   writeFileSync(manifestPath, mutatedManifest);
 };
