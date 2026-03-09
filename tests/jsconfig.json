@@ -1,0 +1,15 @@
+// see aliases defined in vitest.config.js
+{
+  "extends": "../jsconfig.json",
+  "compilerOptions": {
+    "baseUrl": "..",
+    "paths": {
+      "@/*": [
+        "src/*"
+      ],
+      "@@/*": [
+        "tests/*"
+      ]
+    }
+  }
+}
