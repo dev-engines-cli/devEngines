@@ -75,8 +75,10 @@ describe('npm.js', () => {
 
       fs.writeFileSync(cachePath, JSON.stringify(contents));
 
-      await expect(npm.resolveVersion(exact))
-        .resolves.toBe(exact);
+      const result = await npm.resolveVersion(exact);
+
+      expect(result)
+        .toEqual(exact);
     });
 
     test('Resolves "latest"', async () => {
@@ -85,8 +87,10 @@ describe('npm.js', () => {
 
       fs.writeFileSync(cachePath, JSON.stringify(contents));
 
-      await expect(npm.resolveVersion('latest'))
-        .resolves.toBe(latest);
+      const result = await npm.resolveVersion('latest');
+
+      expect(result)
+        .toEqual(latest);
     });
 
     test('Resolves semver x-ranges', async () => {
@@ -95,23 +99,30 @@ describe('npm.js', () => {
 
       fs.writeFileSync(cachePath, JSON.stringify(contents));
 
-      await expect(npm.resolveVersion('9.x.x'))
-        .resolves.toBe(latest);
+      const result = await npm.resolveVersion('9.x.x');
+
+      expect(result)
+        .toEqual(latest);
     });
 
     test('Logs an error if version cannot be resolved', async () => {
+      let result;
       const contents = makeReleases([]);
 
       fs.writeFileSync(cachePath, JSON.stringify(contents));
 
-      await expect(npm.resolveVersion('9001.0.0'))
-        .resolves.toBe(undefined);
+      result = await npm.resolveVersion('9001.0.0');
+
+      expect(result)
+        .toEqual(undefined);
 
       expect(console.log)
         .toHaveBeenCalledWith('Desired npm version cannot be found.');
 
-      await expect(npm.resolveVersion('asdf'))
-        .resolves.toBe(undefined);
+      result = await npm.resolveVersion('asdf');
+
+      expect(result)
+        .toEqual(undefined);
 
       expect(console.log)
         .toHaveBeenCalledWith('Desired npm version cannot be found.');

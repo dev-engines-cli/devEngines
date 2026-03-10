@@ -105,8 +105,10 @@ describe('node.js', () => {
 
       fs.writeFileSync(cachePath, JSON.stringify(contents));
 
-      await expect(node.resolveVersion(exact))
-        .resolves.toBe(exact);
+      const result = await node.resolveVersion(exact);
+
+      expect(result)
+        .toEqual(exact);
     });
 
     test('Resolves "latest"', async () => {
@@ -118,8 +120,10 @@ describe('node.js', () => {
 
       fs.writeFileSync(cachePath, JSON.stringify(contents));
 
-      await expect(node.resolveVersion('latest'))
-        .resolves.toBe(latest);
+      const result = await node.resolveVersion('latest');
+
+      expect(result)
+        .toEqual(latest);
     });
 
     test('Resolves "lts"', async () => {
@@ -131,8 +135,10 @@ describe('node.js', () => {
 
       fs.writeFileSync(cachePath, JSON.stringify(contents));
 
-      await expect(node.resolveVersion('latest'))
-        .resolves.toBe(latest);
+      const result = await node.resolveVersion('latest');
+
+      expect(result)
+        .toEqual(latest);
     });
 
     test('Resolves semver x-ranges', async () => {
@@ -144,23 +150,30 @@ describe('node.js', () => {
 
       fs.writeFileSync(cachePath, JSON.stringify(contents));
 
-      await expect(node.resolveVersion('25.x.x'))
-        .resolves.toBe(latest);
+      const result = await node.resolveVersion('25.x.x');
+
+      expect(result)
+        .toEqual(latest);
     });
 
     test('Logs an error if version cannot be resolved', async () => {
+      let result;
       const contents = makeReleases([]);
 
       fs.writeFileSync(cachePath, JSON.stringify(contents));
 
-      await expect(node.resolveVersion('9001.0.0'))
-        .resolves.toBe(undefined);
+      result = await node.resolveVersion('9001.0.0');
+
+      expect(result)
+        .toEqual(undefined);
 
       expect(console.log)
         .toHaveBeenCalledWith('Desired Node version cannot be found.');
 
-      await expect(node.resolveVersion('asdf'))
-        .resolves.toBe(undefined);
+      result = await node.resolveVersion('asdf');
+
+      expect(result)
+        .toEqual(undefined);
 
       expect(console.log)
         .toHaveBeenCalledWith('Desired Node version cannot be found.');
