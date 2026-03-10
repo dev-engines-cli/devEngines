@@ -2,7 +2,6 @@ import { dirname, join } from 'node:path';
 
 import axios from 'axios';
 import { fs, vol } from 'memfs';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import npm from '@/tools/npm.js';
 

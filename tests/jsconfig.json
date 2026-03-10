@@ -1,8 +1,8 @@
-// see aliases defined in vitest.config.js
 {
   "extends": "../jsconfig.json",
   "compilerOptions": {
     "baseUrl": "..",
+    // see aliases defined in vitest.config.js
     "paths": {
       "@/*": [
         "src/*"
@@ -10,6 +10,9 @@
       "@@/*": [
         "tests/*"
       ]
-    }
+    },
+    "types": [
+      "vitest/globals"
+    ]
   }
 }
