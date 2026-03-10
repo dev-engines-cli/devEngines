@@ -1,141 +1,166 @@
-// TODO: Mock out all network calls with dummy data
-// TODO: Mock out filesystem
-import {
-  existsSync,
-  readFileSync,
-  unlinkSync
-} from 'node:fs';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 
 import axios from 'axios';
+import { fs, vol } from 'memfs';
 
 import node from '@/tools/node.js';
 
-import { LATEST_NODE } from '@@/data/constants.js';
 import { error } from '@@/data/error.js';
 
+vi.mock('node:fs', () => fs);
+vi.mock('axios', () => ({
+  default: {
+    get: vi.fn()
+  }
+}));
+const mockedAxiosGet = vi.mocked(axios.get);
+
 const __dirname = import.meta.dirname;
-const nodeVersionsPath = join(__dirname, '..', '..', '..', '..', 'cacheLists', 'nodeVersions.json');
-let allNodeVersions;
+const cachePath = join(__dirname, '..', '..', '..', '..', 'cacheLists', 'nodeVersions.json');
+
+const makeReleases = (data, date = Date.now()) => ({ date, data });
 
 describe('node.js', () => {
+  beforeEach(() => {
+    vi.resetAllMocks();
+    vol.reset();
+    vol.mkdirSync(dirname(cachePath), { recursive: true });
+  });
+
   describe('getLatestReleases', () => {
     test('Network call fails', async () => {
-      const axiosGet = axios.get;
-      axios.get = vi.fn(() => Promise.reject(error));
+      const contents = makeReleases([]);
 
-      if (existsSync(nodeVersionsPath)) {
-        allNodeVersions = JSON.parse(readFileSync(nodeVersionsPath));
-      }
+      fs.writeFileSync(cachePath, JSON.stringify(contents));
+
+      mockedAxiosGet.mockRejectedValue(error);
+
       const releases = await node.getLatestReleases();
 
-      expect(releases.data.length > 100)
-        .toEqual(true);
+      expect(mockedAxiosGet)
+        .toHaveBeenCalledTimes(1);
 
-      expect(releases.data.length)
-        .toEqual(allNodeVersions.data.length);
+      expect(releases)
+        .toEqual(contents);
 
       expect(console.log)
         .toHaveBeenCalledWith('Error checking for latest Node releases');
 
       expect(console.log)
         .toHaveBeenCalledWith(error);
-
-      axios.get = axiosGet;
     });
 
-    test('Updates the nodeVersions.json file', async () => {
-      if (existsSync(nodeVersionsPath)) {
-        unlinkSync(nodeVersionsPath);
-      }
+    test('Fetches once then uses cache', async () => {
+      const releases = [
+        { version: '1.0.0' },
+        { version: '1.1.0' }
+      ];
+      mockedAxiosGet.mockResolvedValue({
+        data: releases.map((release) => ({
+          ...release,
+          version: 'v' + release.version
+        }))
+      });
 
-      const releases = await node.getLatestReleases();
+      const run1 = await node.getLatestReleases();
+      const run2 = await node.getLatestReleases();
+      const cache = JSON.parse(fs.readFileSync(cachePath, 'utf8'));
 
-      expect(readFileSync(nodeVersionsPath).length > 100)
-        .toEqual(true);
+      expect(mockedAxiosGet)
+        .toHaveBeenCalledTimes(1);
 
-      expect(releases.data.length > 100)
-        .toEqual(true);
+      expect(run1.data)
+        .toEqual(releases);
 
-      expect(releases.data.length)
-        .toEqual(allNodeVersions.data.length);
+      expect(run1)
+        .toEqual(cache);
+
+      expect(run1)
+        .toEqual(run2);
 
       expect(console.log)
         .not.toHaveBeenCalled();
-    });
-
-    test('Running twice in a row skips the network call', async () => {
-      const axiosGet = axios.get;
-      axios.get = vi.fn();
-
-      await node.getLatestReleases();
-
-      expect(axios.get)
-        .not.toHaveBeenCalled();
-
-      axios.get = axiosGet;
     });
   });
 
   describe('getCachedReleases', () => {
     test('Loads contents', () => {
-      if (existsSync(nodeVersionsPath)) {
-        allNodeVersions = JSON.parse(readFileSync(nodeVersionsPath));
-      }
+      const contents = makeReleases([
+        { version: '1.0.0' }
+      ]);
 
-      expect(node.getCachedReleases().data)
-        .toEqual(allNodeVersions.data);
+      fs.writeFileSync(cachePath, JSON.stringify(contents));
+
+      expect(node.getCachedReleases())
+        .toEqual(contents);
     });
   });
 
   describe('resolveVersion', () => {
-    const axiosGet = axios.get;
+    test('Resolves semver exact versions', async () => {
+      const exact = '22.0.0';
+      const contents = makeReleases([
+        { version: exact }
+      ]);
 
-    beforeEach(() => {
-      axios.get = vi.fn(() => Promise.reject(error));
+      fs.writeFileSync(cachePath, JSON.stringify(contents));
+
+      await expect(node.resolveVersion(exact))
+        .resolves.toBe(exact);
     });
 
-    afterEach(() => {
-      axios.get = axiosGet;
+    test('Resolves "latest"', async () => {
+      const latest = '25.8.0';
+      const contents = makeReleases([
+        { version: latest },
+        { version: '25.7.0' }
+      ]);
+
+      fs.writeFileSync(cachePath, JSON.stringify(contents));
+
+      await expect(node.resolveVersion('latest'))
+        .resolves.toBe(latest);
     });
 
-    test('Returns the value if it is already exact', async () => {
-      const result = await node.resolveVersion('22.0.0');
+    test('Resolves "lts"', async () => {
+      const latest = '25.8.0';
+      const contents = makeReleases([
+        { version: latest },
+        { version: '24.14.0' }
+      ]);
 
-      expect(result)
-        .toEqual('22.0.0');
+      fs.writeFileSync(cachePath, JSON.stringify(contents));
+
+      await expect(node.resolveVersion('latest'))
+        .resolves.toBe(latest);
     });
 
-    test('Returns the latest Node version', async () => {
-      const result = await node.resolveVersion('latest');
+    test('Resolves semver x-ranges', async () => {
+      const latest = '25.8.0';
+      const contents = makeReleases([
+        { version: latest },
+        { version: '25.7.0' }
+      ]);
 
-      expect(result)
-        .toEqual(LATEST_NODE);
+      fs.writeFileSync(cachePath, JSON.stringify(contents));
+
+      await expect(node.resolveVersion('25.x.x'))
+        .resolves.toBe(latest);
     });
 
-    test('Returns the LTS Node version', async () => {
-      const result = await node.resolveVersion('lts');
+    test('Logs an error if version cannot be resolved', async () => {
+      const contents = makeReleases([]);
 
-      expect(result)
-        .toMatchInlineSnapshot('"24.14.0"');
-    });
+      fs.writeFileSync(cachePath, JSON.stringify(contents));
 
-    test('Returns the latest Node version 22', async () => {
-      const result = await node.resolveVersion('22.x.x');
-
-      expect(result)
-        .toMatchInlineSnapshot('"22.22.0"');
-    });
-
-    test('Console logs error if Node version cannot be satisfied', async () => {
-      await node.resolveVersion('9001.x.x');
+      await expect(node.resolveVersion('9001.0.0'))
+        .resolves.toBe(undefined);
 
       expect(console.log)
         .toHaveBeenCalledWith('Desired Node version cannot be found.');
-    });
 
-    test('Console logs error for invalid Node version', async () => {
-      await node.resolveVersion('asdf');
+      await expect(node.resolveVersion('asdf'))
+        .resolves.toBe(undefined);
 
       expect(console.log)
         .toHaveBeenCalledWith('Desired Node version cannot be found.');
