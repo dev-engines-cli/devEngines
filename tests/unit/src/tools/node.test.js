@@ -18,8 +18,6 @@ const mockedAxiosGet = vi.mocked(axios.get);
 const __dirname = import.meta.dirname;
 const cachePath = join(__dirname, '..', '..', '..', '..', 'cacheLists', 'nodeVersions.json');
 
-const makeReleases = (data, date = Date.now()) => ({ date, data });
-
 describe('node.js', () => {
   beforeEach(() => {
     vi.resetAllMocks();
@@ -29,7 +27,10 @@ describe('node.js', () => {
 
   describe('getLatestReleases', () => {
     test('Network call fails', async () => {
-      const contents = makeReleases([]);
+      const contents = {
+        date: Date.now(),
+        data: []
+      };
 
       fs.writeFileSync(cachePath, JSON.stringify(contents));
 
@@ -85,9 +86,12 @@ describe('node.js', () => {
 
   describe('getCachedReleases', () => {
     test('Loads contents', () => {
-      const contents = makeReleases([
-        { version: '1.0.0' }
-      ]);
+      const contents = {
+        date: Date.now(),
+        data: [
+          { version: '1.0.0' }
+        ]
+      };
 
       fs.writeFileSync(cachePath, JSON.stringify(contents));
 
@@ -99,9 +103,12 @@ describe('node.js', () => {
   describe('resolveVersion', () => {
     test('Resolves semver exact versions', async () => {
       const exact = '22.0.0';
-      const contents = makeReleases([
-        { version: exact }
-      ]);
+      const contents = {
+        date: Date.now(),
+        data: [
+          { version: exact }
+        ]
+      };
 
       fs.writeFileSync(cachePath, JSON.stringify(contents));
 
@@ -113,10 +120,13 @@ describe('node.js', () => {
 
     test('Resolves "latest"', async () => {
       const latest = '25.8.0';
-      const contents = makeReleases([
-        { version: latest },
-        { version: '25.7.0' }
-      ]);
+      const contents = {
+        date: Date.now(),
+        data: [
+          { version: latest },
+          { version: '25.7.0' }
+        ]
+      };
 
       fs.writeFileSync(cachePath, JSON.stringify(contents));
 
@@ -127,26 +137,32 @@ describe('node.js', () => {
     });
 
     test('Resolves "lts"', async () => {
-      const latest = '25.8.0';
-      const contents = makeReleases([
-        { version: latest },
-        { version: '24.14.0' }
-      ]);
+      const lts = '24.14.0';
+      const contents = {
+        date: Date.now(),
+        data: [
+          { version: '25.8.1' },
+          { version: lts, lts: 'Krypton' }
+        ]
+      };
 
       fs.writeFileSync(cachePath, JSON.stringify(contents));
 
-      const result = await node.resolveVersion('latest');
+      const result = await node.resolveVersion('lts');
 
       expect(result)
-        .toEqual(latest);
+        .toEqual(lts);
     });
 
     test('Resolves semver x-ranges', async () => {
       const latest = '25.8.0';
-      const contents = makeReleases([
-        { version: latest },
-        { version: '25.7.0' }
-      ]);
+      const contents = {
+        date: Date.now(),
+        data: [
+          { version: latest },
+          { version: '25.7.0' }
+        ]
+      };
 
       fs.writeFileSync(cachePath, JSON.stringify(contents));
 
@@ -158,11 +174,14 @@ describe('node.js', () => {
 
     test('Logs an error if version cannot be resolved', async () => {
       let result;
-      const contents = makeReleases([]);
+      const contents = {
+        date: Date.now(),
+        data: []
+      };
 
       fs.writeFileSync(cachePath, JSON.stringify(contents));
 
-      result = await node.resolveVersion('9001.0.0');
+      result = await node.resolveVersion('9001.x.x');
 
       expect(result)
         .toEqual(undefined);
