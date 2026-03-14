@@ -173,7 +173,6 @@ describe('node.js', () => {
     });
 
     test('Logs an error if version cannot be resolved', async () => {
-      let result;
       const contents = {
         date: Date.now(),
         data: []
@@ -181,15 +180,24 @@ describe('node.js', () => {
 
       fs.writeFileSync(cachePath, JSON.stringify(contents));
 
-      result = await node.resolveVersion('9001.x.x');
+      const result = await node.resolveVersion('9001.x.x');
 
       expect(result)
         .toEqual(undefined);
 
       expect(console.log)
         .toHaveBeenCalledWith('Desired Node version cannot be found.');
+    });
 
-      result = await node.resolveVersion('asdf');
+    test('Logs an error if version is invalid', async () => {
+      const contents = {
+        date: Date.now(),
+        data: []
+      };
+
+      fs.writeFileSync(cachePath, JSON.stringify(contents));
+
+      const result = await node.resolveVersion('asdf');
 
       expect(result)
         .toEqual(undefined);

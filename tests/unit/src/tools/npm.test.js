@@ -16,8 +16,6 @@ const mockedAxiosGet = vi.mocked(axios.get);
 const __dirname = import.meta.dirname;
 const cachePath = join(__dirname, '..', '..', '..', '..', 'cacheLists', 'npmVersions.json');
 
-const makeReleases = (data, date = Date.now()) => ({ date, data });
-
 describe('npm.js', () => {
   beforeEach(() => {
     vi.resetAllMocks();
@@ -27,14 +25,14 @@ describe('npm.js', () => {
 
   describe('getLatestReleases', () => {
     test('Fetches once then uses cache', async () => {
-      const versions = ['1.1.0', '1.0.0'];
-      mockedAxiosGet.mockResolvedValue({
-        data: {
-          versions: Object.fromEntries(
-            versions.map((version) => [version, {}])
-          )
+      const data = {
+        versions: {
+          '1.1.0': {},
+          '1.0.0': {}
         }
-      });
+      };
+      const versions = Object.keys(data.versions);
+      mockedAxiosGet.mockResolvedValue({ data });
 
       const run1 = await npm.getLatestReleases();
       const run2 = await npm.getLatestReleases();
@@ -59,7 +57,10 @@ describe('npm.js', () => {
 
   describe('getCachedReleases', () => {
     test('Loads contents', () => {
-      const contents = makeReleases(['1.0.0']);
+      const contents = {
+        date: Date.now(),
+        data: ['1.0.0']
+      };
 
       fs.writeFileSync(cachePath, JSON.stringify(contents));
 
@@ -71,7 +72,10 @@ describe('npm.js', () => {
   describe('resolveVersion', () => {
     test('Resolves semver exact versions', async () => {
       const exact = '11.0.0';
-      const contents = makeReleases([exact]);
+      const contents = {
+        date: Date.now(),
+        data: [exact]
+      };
 
       fs.writeFileSync(cachePath, JSON.stringify(contents));
 
@@ -81,45 +85,71 @@ describe('npm.js', () => {
         .toEqual(exact);
     });
 
-    test('Resolves "latest"', async () => {
+    test('Resolves "latest" and "lts"', async () => {
       const latest = '11.11.0';
-      const contents = makeReleases([latest, '11.0.0']);
+      const contents = {
+        date: Date.now(),
+        data: [latest, '11.0.0']
+      };
 
       fs.writeFileSync(cachePath, JSON.stringify(contents));
 
-      const result = await npm.resolveVersion('latest');
+      const resultLatest = await npm.resolveVersion('latest');
+      const resultLts = await npm.resolveVersion('lts');
 
-      expect(result)
+      expect(resultLatest)
+        .toEqual(latest);
+
+      expect(resultLts)
         .toEqual(latest);
     });
 
     test('Resolves semver x-ranges', async () => {
-      const latest = '9.9.4';
-      const contents = makeReleases([latest, '9.0.0']);
+      const expected = '9.9.4';
+      const contents = {
+        date: Date.now(),
+        data: [
+          '10.0.0',
+          expected,
+          '9.0.0',
+          '8.0.0'
+        ]
+      };
 
       fs.writeFileSync(cachePath, JSON.stringify(contents));
 
       const result = await npm.resolveVersion('9.x.x');
 
       expect(result)
-        .toEqual(latest);
+        .toEqual(expected);
     });
 
     test('Logs an error if version cannot be resolved', async () => {
-      let result;
-      const contents = makeReleases([]);
+      const contents = {
+        date: Date.now(),
+        data: []
+      };
 
       fs.writeFileSync(cachePath, JSON.stringify(contents));
 
-      result = await npm.resolveVersion('9001.0.0');
+      const result = await npm.resolveVersion('9001.x.x');
 
       expect(result)
         .toEqual(undefined);
 
       expect(console.log)
         .toHaveBeenCalledWith('Desired npm version cannot be found.');
+    });
 
-      result = await npm.resolveVersion('asdf');
+    test('Logs an error if version is invalid', async () => {
+      const contents = {
+        date: Date.now(),
+        data: []
+      };
+
+      fs.writeFileSync(cachePath, JSON.stringify(contents));
+
+      const result = await npm.resolveVersion('asdf');
 
       expect(result)
         .toEqual(undefined);
