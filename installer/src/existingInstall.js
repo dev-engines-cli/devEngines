@@ -90,7 +90,7 @@ const uninstallDevEnginesCli = async function () {
 export const handleExistingInstall = async function (state) {
   if (state.existingVersion) {
     const choice = await select({
-      message: 'Found an existing installation of devEngines CLI (v' + state.existingVersion +'):',
+      message: 'Found an existing installation of devEngines CLI (v' + state.existingVersion + '):',
       options: [
         {
           label: 'Keep it',
@@ -122,6 +122,7 @@ export const handleExistingInstall = async function (state) {
       delete: deleteAndReinstall,
       uninstall: uninstallDevEnginesCli
     };
-    return await choiceMap[choice](state);
+    const result = await choiceMap[choice](state);
+    return result;
   }
 };
