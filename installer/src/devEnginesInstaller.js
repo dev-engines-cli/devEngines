@@ -3,6 +3,7 @@
  */
 
 import console from 'node:console';
+import { chdir } from 'node:process';
 
 import { handleExistingInstall } from './existingInstall.js';
 import { logger } from './logger.js';
@@ -19,6 +20,7 @@ const run = async function () {
   const existingOutcome = await handleExistingInstall(state);
   if (existingOutcome === 'done') {
     logger('Done.');
+    chdir(state.cwd);
     return;
   }
 
