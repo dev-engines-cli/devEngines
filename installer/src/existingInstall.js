@@ -10,8 +10,6 @@ import { select } from '@clack/prompts';
 
 import { logger } from './logger.js';
 
-const __dirname = import.meta.dirname;
-
 /** @typedef {import('../types.js').STATE} STATE */
 
 /**
