@@ -1,105 +1,158 @@
-// TODO: Mock out all network calls with dummy data
-// TODO: Mock out filesystem
-import {
-  existsSync,
-  readFileSync,
-  unlinkSync
-} from 'node:fs';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 
-import { LATEST_NPM } from '@@/data/constants.js';
+import axios from 'axios';
+import { fs, vol } from 'memfs';
 
 import npm from '@/tools/npm.js';
 
+vi.mock('node:fs', () => fs);
+vi.mock('axios', () => ({
+  default: {
+    get: vi.fn()
+  }
+}));
+const mockedAxiosGet = vi.mocked(axios.get);
+
 const __dirname = import.meta.dirname;
-const npmVersionsPath = join(__dirname, '..', '..', '..', '..', 'cacheLists', 'npmVersions.json');
-let allNpmVersions;
+const cachePath = join(__dirname, '..', '..', '..', '..', 'cacheLists', 'npmVersions.json');
 
 describe('npm.js', () => {
+  beforeEach(() => {
+    vi.resetAllMocks();
+    vol.reset();
+    vol.mkdirSync(dirname(cachePath), { recursive: true });
+  });
+
   describe('getLatestReleases', () => {
-    test('Updates the npmVersions.json file', async () => {
-      if (existsSync(npmVersionsPath)) {
-        allNpmVersions = JSON.parse(readFileSync(npmVersionsPath));
-      }
-      if (existsSync(npmVersionsPath)) {
-        unlinkSync(npmVersionsPath);
-      }
+    test('Fetches once then uses cache', async () => {
+      const data = {
+        versions: {
+          '1.1.0': {},
+          '1.0.0': {}
+        }
+      };
+      const versions = Object.keys(data.versions);
+      mockedAxiosGet.mockResolvedValue({ data });
 
-      const releases = await npm.getLatestReleases();
+      const run1 = await npm.getLatestReleases();
+      const run2 = await npm.getLatestReleases();
+      const cache = JSON.parse(fs.readFileSync(cachePath, 'utf8'));
 
-      expect(readFileSync(npmVersionsPath).length > 100)
-        .toEqual(true);
+      expect(mockedAxiosGet)
+        .toHaveBeenCalledTimes(1);
 
-      expect(releases.data.length > 100)
-        .toEqual(true);
+      expect(run1.data)
+        .toEqual(versions);
 
-      expect(releases.data.length)
-        .toEqual(allNpmVersions.data.length);
+      expect(run1)
+        .toEqual(cache);
+
+      expect(run1)
+        .toEqual(run2);
 
       expect(console.log)
         .not.toHaveBeenCalled();
-    });
-
-    test('Running twice in a row uses the cache', async () => {
-      if (existsSync(npmVersionsPath)) {
-        allNpmVersions = JSON.parse(readFileSync(npmVersionsPath));
-      }
-      const releases = await npm.getLatestReleases();
-
-      expect(releases.date)
-        .toEqual(allNpmVersions.date);
     });
   });
 
   describe('getCachedReleases', () => {
     test('Loads contents', () => {
-      if (existsSync(npmVersionsPath)) {
-        allNpmVersions = JSON.parse(readFileSync(npmVersionsPath));
-      }
+      const contents = {
+        date: Date.now(),
+        data: ['1.0.0']
+      };
 
-      expect(npm.getCachedReleases().data)
-        .toEqual(allNpmVersions.data);
+      fs.writeFileSync(cachePath, JSON.stringify(contents));
+
+      expect(npm.getCachedReleases())
+        .toEqual(contents);
     });
   });
 
   describe('resolveVersion', () => {
-    test('Returns the value if it is already exact', async () => {
-      const result = await npm.resolveVersion('11.0.0');
+    test('Resolves semver exact versions', async () => {
+      const exact = '11.0.0';
+      const contents = {
+        date: Date.now(),
+        data: [exact]
+      };
+
+      fs.writeFileSync(cachePath, JSON.stringify(contents));
+
+      const result = await npm.resolveVersion(exact);
 
       expect(result)
-        .toEqual('11.0.0');
+        .toEqual(exact);
     });
 
-    test('Returns the latest npm version', async () => {
-      const result = await npm.resolveVersion('latest');
+    test('Resolves "latest" and "lts"', async () => {
+      const latest = '11.11.0';
+      const contents = {
+        date: Date.now(),
+        data: [latest, '11.0.0']
+      };
 
-      expect(result)
-        .toEqual(LATEST_NPM);
+      fs.writeFileSync(cachePath, JSON.stringify(contents));
+
+      const resultLatest = await npm.resolveVersion('latest');
+      const resultLts = await npm.resolveVersion('lts');
+
+      expect(resultLatest)
+        .toEqual(latest);
+
+      expect(resultLts)
+        .toEqual(latest);
     });
 
-    test('Returns the LTS npm version', async () => {
-      const result = await npm.resolveVersion('lts');
+    test('Resolves semver x-ranges', async () => {
+      const expected = '9.9.4';
+      const contents = {
+        date: Date.now(),
+        data: [
+          '10.0.0',
+          expected,
+          '9.0.0',
+          '8.0.0'
+        ]
+      };
 
-      expect(result)
-        .toEqual(LATEST_NPM);
-    });
+      fs.writeFileSync(cachePath, JSON.stringify(contents));
 
-    test('Returns the latest npm version 9', async () => {
       const result = await npm.resolveVersion('9.x.x');
 
       expect(result)
-        .toMatchInlineSnapshot('"9.9.4"');
+        .toEqual(expected);
     });
 
-    test('Console logs error if npm version cannot be satisfied', async () => {
-      await npm.resolveVersion('9001.x.x');
+    test('Logs an error if version cannot be resolved', async () => {
+      const contents = {
+        date: Date.now(),
+        data: []
+      };
+
+      fs.writeFileSync(cachePath, JSON.stringify(contents));
+
+      const result = await npm.resolveVersion('9001.x.x');
+
+      expect(result)
+        .toEqual(undefined);
 
       expect(console.log)
         .toHaveBeenCalledWith('Desired npm version cannot be found.');
     });
 
-    test('Console logs error for invalid npm version', async () => {
-      await npm.resolveVersion('asdf');
+    test('Logs an error if version is invalid', async () => {
+      const contents = {
+        date: Date.now(),
+        data: []
+      };
+
+      fs.writeFileSync(cachePath, JSON.stringify(contents));
+
+      const result = await npm.resolveVersion('asdf');
+
+      expect(result)
+        .toEqual(undefined);
 
       expect(console.log)
         .toHaveBeenCalledWith('Desired npm version cannot be found.');

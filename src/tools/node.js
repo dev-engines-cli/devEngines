@@ -51,7 +51,7 @@ const getCachedReleases = function () {
  * last 10 seconds and if so, returns it. Otherwise downloads the latest
  * version and updates the nodeVersions.json cache.
  *
- * @return {NODERELEASES} List of node releases (or undefined) and a timestamp
+ * @return {Promise<NODERELEASES>} List of node releases (or undefined) and a timestamp
  */
 const getLatestReleases = async function () {
   const nodeVersionsUrl = 'https://nodejs.org/download/release/index.json';
@@ -93,8 +93,8 @@ const getLatestReleases = async function () {
 /**
  * Finds an exact version number based on the desired version passed in.
  *
- * @param  {string} version  A version (`22`, `>=24.0.0`, `lts`, etc)
- * @return {string}          An exact version number (`24.1.0`)
+ * @param  {string}                    version  A version (`22`, `>=24.0.0`, `lts`, etc)
+ * @return {Promise<string|undefined>}          An exact version number (`24.1.0`)
  */
 const resolveVersion = async function (version) {
   const nodeReleases = await getLatestReleases();
@@ -130,6 +130,7 @@ const resolveVersion = async function (version) {
   }
 
   console.log('Desired Node version cannot be found.');
+  return undefined;
 };
 
 export default {

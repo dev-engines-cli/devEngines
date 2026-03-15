@@ -3,11 +3,12 @@
  *       resolve a given npm version to an exact version.
  */
 
-import { execSync } from 'node:child_process';
 import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
+import axios from 'axios';
 import {
+  rcompare,
   satisfies,
   valid,
   validRange
@@ -42,9 +43,10 @@ const getCachedReleases = function () {
  * last 10 seconds and if so, returns it. Otherwise downloads the latest
  * version and updates the nodeVersions.json cache.
  *
- * @return {NPMRELEASES} List of npm versions and a timestamp
+ * @return {Promise<NPMRELEASES>} List of npm versions and a timestamp
  */
-const getLatestReleases = function () {
+const getLatestReleases = async function () {
+  const npmVersionsUrl = 'https://registry.npmjs.org/npm';
   let cache = getCachedReleases();
   let contents = cache;
   if (cache?.data?.length) {
@@ -56,13 +58,19 @@ const getLatestReleases = function () {
   }
 
   try {
-    // TODO: Replace with regular network call to more easily mock in tests
     // TODO: May also need URL that returns release download file names
-    let versions = execSync('npm view npm versions');
-    versions = String(versions);
-    versions = versions.replaceAll('\'', '"');
-    versions = JSON.parse(versions);
-    versions = versions.reverse();
+    const response = await axios.get(npmVersionsUrl, {
+      headers: {
+        // accept header is used to send an abbreviated document instead of the full one
+        // results in a ~90% reduction in response size
+        // see: https://github.com/npm/registry/blob/ae49abf/docs/responses/package-metadata.md
+        Accept: 'application/vnd.npm.install-v1+json; q=1.0, application/json; q=0.8'
+      }
+    });
+    // TODO: Properly parse response data to ensure the data is what we expect
+    const versions = Object
+      .keys(response.data.versions)
+      .sort(rcompare);
     if (versions?.length > (cache?.data?.length || 0)) {
       contents = {
         date: (new Date()).getTime(),
@@ -81,11 +89,11 @@ const getLatestReleases = function () {
 /**
  * Finds an exact version number based on the desired version passed in.
  *
- * @param  {string} desiredVersion  A version (`9`, `>=9.0.0`, `lts`, etc)
- * @return {string}                 An exact version number (`9.9.4`)
+ * @param  {string}                    desiredVersion  A version (`9`, `>=9.0.0`, `lts`, etc)
+ * @return {Promise<string|undefined>}                 An exact version number (`9.9.4`)
  */
-const resolveVersion = function (desiredVersion) {
-  const npmReleases = getLatestReleases();
+const resolveVersion = async function (desiredVersion) {
+  const npmReleases = await getLatestReleases();
   const npmVersions = npmReleases?.data || [];
 
   if (desiredVersion === 'latest') {
