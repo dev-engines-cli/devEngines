@@ -7,6 +7,8 @@ import {
 } from 'node:fs';
 import { join } from 'node:path';
 
+import { LATEST_NPM } from '@@/data/constants.js';
+
 import npm from '@/tools/npm.js';
 
 const __dirname = import.meta.dirname;
@@ -72,14 +74,14 @@ describe('npm.js', () => {
       const result = await npm.resolveVersion('latest');
 
       expect(result)
-        .toMatchInlineSnapshot('"11.11.0"');
+        .toEqual(LATEST_NPM);
     });
 
     test('Returns the LTS npm version', async () => {
       const result = await npm.resolveVersion('lts');
 
       expect(result)
-        .toMatchInlineSnapshot('"11.11.0"');
+        .toEqual(LATEST_NPM);
     });
 
     test('Returns the latest npm version 9', async () => {

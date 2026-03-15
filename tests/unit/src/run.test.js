@@ -4,7 +4,8 @@ import { run, updateAllTools } from '@/run.js';
 import {
   CLI_VERSION,
   HELP_MENU,
-  LATEST_NODE
+  LATEST_NODE,
+  LATEST_NPM
 } from '@@/data/constants.js';
 import { resetGlobalToolsFile } from '@@/unit/testHelpers.js';
 
@@ -98,7 +99,7 @@ describe('run.js', () => {
         await run(false, 'npm@latest');
 
         expect(console.log)
-          .toHaveBeenCalledWith('Pin local npm to 11.11.0');
+          .toHaveBeenCalledWith('Pin local npm to ' + LATEST_NPM);
       });
 
       test('Run devEngines npm@', async () => {

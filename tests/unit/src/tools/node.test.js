@@ -124,7 +124,7 @@ describe('node.js', () => {
       const result = await node.resolveVersion('22.x.x');
 
       expect(result)
-        .toMatchInlineSnapshot('"22.22.0"');
+        .toMatchInlineSnapshot('"22.22.1"');
     });
 
     test('Console logs error if Node version cannot be satisfied', async () => {
