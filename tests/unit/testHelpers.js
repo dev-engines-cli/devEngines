@@ -5,9 +5,8 @@
 import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-const __dirname = import.meta.dirname;
+import { files } from '@/pathMap.js';
 
-export const globalToolsPath = join(__dirname, '..', '..', 'globalTools.json');
 export const globalToolsDummyData = Object.freeze({
   node: '25.0.0',
   npm: '11.0.0'
@@ -19,5 +18,5 @@ export const globalToolsDummyData = Object.freeze({
  */
 export const resetGlobalToolsFile = function () {
   const content = JSON.stringify(globalToolsDummyData, null, 2) + '\n';
-  writeFileSync(globalToolsPath, content);
+  writeFileSync(files.globalTools, content);
 };

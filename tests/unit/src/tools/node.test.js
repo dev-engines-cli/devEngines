@@ -7,12 +7,16 @@ import node from '@/tools/node.js';
 
 import { error } from '@@/data/error.js';
 
-vi.mock('node:fs', () => fs);
-vi.mock('axios', () => ({
-  default: {
-    get: vi.fn()
-  }
-}));
+vi.mock('node:fs', () => {
+  return fs;
+});
+vi.mock('axios', () => {
+  return {
+    default: {
+      get: vi.fn()
+    }
+  };
+});
 const mockedAxiosGet = vi.mocked(axios.get);
 
 const __dirname = import.meta.dirname;
