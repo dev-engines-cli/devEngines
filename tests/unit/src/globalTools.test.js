@@ -6,7 +6,7 @@ import {
 } from '@/globalTools.js';
 import { files, folders } from '@/pathMap.js';
 
-import { error } from '@@/data/error.js'
+import { error } from '@@/data/error.js';
 
 vi.mock('node:fs', () => {
   return {
