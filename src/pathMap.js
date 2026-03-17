@@ -14,10 +14,6 @@ const cachedNodeVersions = join(cacheLists, 'nodeVersions.json');
 const globalTools = join(root, 'globalTools.json');
 const projectManifest = join(root, 'package.json');
 
-export const folders = {
-  root,
-  cacheLists
-};
 export const files = {
   cachedNpmVersions,
   cachedNodeVersions,

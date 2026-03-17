@@ -1,10 +1,12 @@
+import { dirname } from 'node:path';
+
 import { fs, vol } from 'memfs';
 
 import {
   getGlobalToolVersions,
   setGlobalToolVersion
 } from '@/globalTools.js';
-import { files, folders } from '@/pathMap.js';
+import { files } from '@/pathMap.js';
 
 import { error } from '@@/data/error.js';
 
@@ -26,13 +28,15 @@ const globalToolsDummyData = Object.freeze({
   npm: '11.0.0'
 });
 
+const globalToolsPath = files.globalTools;
+
 describe('globalTools.js', () => {
   beforeEach(() => {
     vi.resetAllMocks();
     vol.reset();
-    vol.mkdirSync(folders.root, { recursive: true });
+    vol.mkdirSync(dirname(globalToolsPath), { recursive: true });
     const content = JSON.stringify(globalToolsDummyData, null, 2) + '\n';
-    vol.writeFileSync(files.globalTools, content);
+    vol.writeFileSync(globalToolsPath, content);
   });
 
   afterEach(() => {
@@ -53,7 +57,7 @@ describe('globalTools.js', () => {
     });
 
     test('Does not find the globalTools.json', () => {
-      vol.unlinkSync(files.globalTools);
+      vol.unlinkSync(globalToolsPath);
 
       expect(getGlobalToolVersions())
         .toEqual({
@@ -71,7 +75,7 @@ describe('globalTools.js', () => {
     test('Does not change the file if tool is invalid', () => {
       setGlobalToolVersion('asdf', '1.0.0');
 
-      expect(JSON.parse(vol.readFileSync(files.globalTools)))
+      expect(JSON.parse(vol.readFileSync(globalToolsPath)))
         .toEqual(globalToolsDummyData);
     });
 
@@ -83,7 +87,7 @@ describe('globalTools.js', () => {
       setGlobalToolVersion('pnpm', '5.0.0');
       setGlobalToolVersion('yarn', '6.0.0');
 
-      expect(JSON.parse(vol.readFileSync(files.globalTools)))
+      expect(JSON.parse(vol.readFileSync(globalToolsPath)))
         .toEqual({
           bun: '1.0.0',
           deno: '2.0.0',
@@ -100,7 +104,7 @@ describe('globalTools.js', () => {
       setGlobalToolVersion('node', '24.0.0');
 
       expect(console.log)
-        .toHaveBeenCalledWith('Error setting Node to 24.0.0 in:\n' + files.globalTools);
+        .toHaveBeenCalledWith('Error setting Node to 24.0.0 in:\n' + globalToolsPath);
     });
   });
 });
