@@ -1,7 +1,9 @@
+import { dirname } from 'node:path';
+
 import axios from 'axios';
 import { fs, vol } from 'memfs';
 
-import { files, folders } from '@/pathMap.js';
+import { files } from '@/pathMap.js';
 import npm from '@/tools/npm.js';
 
 import { error } from '@@/data/error.js';
@@ -20,7 +22,7 @@ describe('npm.js', () => {
   beforeEach(() => {
     vi.resetAllMocks();
     vol.reset();
-    vol.mkdirSync(folders.cacheLists, { recursive: true });
+    vol.mkdirSync(dirname(cachePath), { recursive: true });
   });
 
   describe('getLatestReleases', () => {
