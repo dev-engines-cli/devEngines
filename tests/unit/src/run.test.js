@@ -127,7 +127,11 @@ describe('run.js', () => {
     });
 
     test('Unsupported tool', async () => {
-      await run(!runAsGlobal, 'bun@1.0.0');
+      // TODO: The "unsupportTool" stuff is just a stub until
+      //       Deno, Bun, Yarn, PNPM can all be support.
+      //       Once that is the case this test, that file,
+      //       and code related to it, can be removed.
+      await run(!runAsGlobal, 'yarn@1.0.0');
 
       expect(console.log)
         .toHaveBeenCalledWith('Tool unsupported');
