@@ -17,7 +17,7 @@ import {
   supportedTools
 } from './helpers.js';
 
-// TODO: Because monorepos, we should verify the devEgnins field exists
+// TODO: Because monorepos, we should verify the devEngines field exists
 //       in the found manifest, and if not, continue looking.
 /**
  * Recursively looks for the package.json file in the current directory
