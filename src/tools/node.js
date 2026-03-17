@@ -4,7 +4,6 @@
  */
 
 import { writeFileSync } from 'node:fs';
-import { join } from 'node:path';
 
 import axios from 'axios';
 import {
@@ -17,10 +16,7 @@ import {
   API_COOL_DOWN,
   loadJsonFile
 } from '../helpers.js';
-
-const __dirname = import.meta.dirname;
-
-const nodeVersionsPath = join(__dirname, '..', '..', 'cacheLists', 'nodeVersions.json');
+import { files } from '../pathMap.js';
 
 /**
  * @typedef  {object}   NODERELEASE
@@ -43,7 +39,7 @@ const nodeVersionsPath = join(__dirname, '..', '..', 'cacheLists', 'nodeVersions
  * @return {NODERELEASES} List of node releases with timestamp
  */
 const getCachedReleases = function () {
-  return loadJsonFile(nodeVersionsPath);
+  return loadJsonFile(files.cachedNodeVersions);
 };
 
 /**
@@ -81,7 +77,7 @@ const getLatestReleases = async function () {
         data
       };
       const fileContents = JSON.stringify(contents, null, 2) + '\n';
-      writeFileSync(nodeVersionsPath, fileContents);
+      writeFileSync(files.cachedNodeVersions, fileContents);
     }
   } catch (error) {
     console.log('Error checking for latest Node releases');

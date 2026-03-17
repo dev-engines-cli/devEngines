@@ -28,12 +28,15 @@ const globalToolsDummyData = Object.freeze({
 
 describe('globalTools.js', () => {
   beforeEach(() => {
-    global.writeFileSyncShouldThrow = false;
     vi.resetAllMocks();
     vol.reset();
     vol.mkdirSync(folders.root, { recursive: true });
     const content = JSON.stringify(globalToolsDummyData, null, 2) + '\n';
     vol.writeFileSync(files.globalTools, content);
+  });
+
+  afterEach(() => {
+    global.writeFileSyncShouldThrow = false;
   });
 
   describe('getGlobalToolVersions', () => {
@@ -98,8 +101,6 @@ describe('globalTools.js', () => {
 
       expect(console.log)
         .toHaveBeenCalledWith('Error setting Node to 24.0.0 in:\n' + files.globalTools);
-
-      global.writeFileSyncShouldThrow = false;
     });
   });
 });

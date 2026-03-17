@@ -1,8 +1,7 @@
-import { dirname, join } from 'node:path';
-
 import axios from 'axios';
 import { fs, vol } from 'memfs';
 
+import { files, folders } from '@/pathMap.js';
 import node from '@/tools/node.js';
 
 import { error } from '@@/data/error.js';
@@ -19,14 +18,13 @@ vi.mock('axios', () => {
 });
 const mockedAxiosGet = vi.mocked(axios.get);
 
-const __dirname = import.meta.dirname;
-const cachePath = join(__dirname, '..', '..', '..', '..', 'cacheLists', 'nodeVersions.json');
+const cachePath = files.cachedNodeVersions;
 
 describe('node.js', () => {
   beforeEach(() => {
     vi.resetAllMocks();
     vol.reset();
-    vol.mkdirSync(dirname(cachePath), { recursive: true });
+    vol.mkdirSync(folders.cacheLists, { recursive: true });
   });
 
   describe('getLatestReleases', () => {
