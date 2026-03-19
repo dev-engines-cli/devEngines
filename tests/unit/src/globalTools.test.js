@@ -22,7 +22,6 @@ vi.mock('node:fs', () => {
   };
 });
 
-
 const globalToolsPath = files.globalTools;
 
 describe('globalTools.js', () => {
