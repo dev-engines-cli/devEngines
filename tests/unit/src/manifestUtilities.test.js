@@ -35,43 +35,44 @@ describe('manifestUtilities.js', () => {
       expect(findManifest())
         .toEqual(files.projectManifest);
     });
-    /*
     test('Hits max attempts', () => {
-      process.chdir(
-        join(
-          __dirname,
-          '..',
-          '..',
-          'data',
-          '22',
-          '21',
-          '20',
-          '19',
-          '18',
-          '17',
-          '16',
-          '15',
-          '14',
-          '13',
-          '12',
-          '11',
-          '10',
-          '9',
-          '8',
-          '7',
-          '6',
-          '5',
-          '4',
-          '3',
-          '2',
-          '1',
-          '0'
-        )
+      const deepPath = join(
+        __dirname,
+        '..',
+        '..',
+        'data',
+        '22',
+        '21',
+        '20',
+        '19',
+        '18',
+        '17',
+        '16',
+        '15',
+        '14',
+        '13',
+        '12',
+        '11',
+        '10',
+        '9',
+        '8',
+        '7',
+        '6',
+        '5',
+        '4',
+        '3',
+        '2',
+        '1',
+        '0'
       );
+      vol.mkdirSync(process.cwd(), { recursive: true });
+      makeProjectManifest(vol);
+      vol.mkdirSync(deepPath, { recursive: true });
 
-      expect(findManifest())
+      expect(findManifest(deepPath))
         .toEqual(undefined);
     });
+    /*
 
     test('Hits system root', () => {
       process.chdir(join(__dirname, '..', '..', '..', '..'));
