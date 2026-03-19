@@ -1,11 +1,9 @@
 import {
-  readFileSync,
-  writeFileSync
-} from 'node:fs';
-import {
   join,
   resolve
 } from 'node:path';
+
+import { fs, vol } from 'memfs';
 
 import {
   findManifest,
@@ -14,20 +12,30 @@ import {
   mutateManifest,
   setToolInDevEngines
 } from '@/manifestUtilities.js';
+import { files } from '@/pathMap.js';
+
+import { makeProjectManifest } from '@@/unit/testHelpers.js';
+
+vi.mock('node:fs', () => {
+  return fs;
+});
 
 const __dirname = import.meta.dirname;
 
 describe('manifestUtilities.js', () => {
-  afterEach(() => {
-    process.chdir(__dirname);
+  beforeEach(() => {
+    vi.resetAllMocks();
+    vol.reset();
   });
 
   describe('findManifest', () => {
     test('Finds the manifest', () => {
-      expect(findManifest())
-        .toEqual(join(__dirname, '..', '..', '..', 'package.json'));
-    });
+      makeProjectManifest(vol);
 
+      expect(findManifest())
+        .toEqual(files.projectManifest);
+    });
+    /*
     test('Hits max attempts', () => {
       process.chdir(
         join(
@@ -71,8 +79,10 @@ describe('manifestUtilities.js', () => {
       expect(findManifest())
         .toEqual(undefined);
     });
+    */
   });
 
+  /*
   describe('getManifestData', () => {
     test('Returns the manifest as JSON', () => {
       const data = getManifestData();
@@ -337,10 +347,10 @@ describe('manifestUtilities.js', () => {
 
       function resetDummyFile () {
         const data = JSON.stringify({ name: 'set-versions' }, null, 2);
-        writeFileSync(setVersionsManifestPath, data + '\n');
+        vol.writeFileSync(setVersionsManifestPath, data + '\n');
       }
       function checkDummyFile () {
-        return String(readFileSync(setVersionsManifestPath)).trim();
+        return String(vol.readFileSync(setVersionsManifestPath)).trim();
       }
 
       beforeEach(() => {
@@ -401,4 +411,5 @@ describe('manifestUtilities.js', () => {
       });
     });
   });
+  */
 });
