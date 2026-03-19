@@ -1,4 +1,6 @@
-import { helpMessage } from '@/helpMenu.js';
+import axios from 'axios';
+import { fs, vol } from 'memfs';
+
 import { run, updateAllTools } from '@/run.js';
 
 import {
@@ -7,10 +9,35 @@ import {
   LATEST_NODE,
   LATEST_NPM
 } from '@@/data/constants.js';
-import { resetGlobalToolsFile } from '@@/unit/testHelpers.js';
+import {
+  makeCacheListFolder,
+  makeGlobalToolsDummyData,
+  makeProjectManifest,
+  mockNodeReleases,
+  mockNpmReleases
+} from '@@/unit/testHelpers.js';
+
+vi.mock('node:fs', () => {
+  return fs;
+});
+vi.mock('axios', () => {
+  return {
+    default: {
+      get: vi.fn()
+    }
+  };
+});
+makeProjectManifest(vol);
+const mockedAxiosGet = vi.mocked(axios.get);
 
 describe('run.js', () => {
   const runAsGlobal = true;
+
+  beforeEach(() => {
+    vi.resetAllMocks();
+    vol.reset();
+    makeProjectManifest(vol);
+  });
 
   describe('run', () => {
     describe('Global installs', () => {
@@ -22,13 +49,14 @@ describe('run.js', () => {
       });
 
       test('Global with argument', async () => {
+        mockNodeReleases(mockedAxiosGet);
+        makeCacheListFolder(vol);
+        makeGlobalToolsDummyData(vol);
+
         await run(runAsGlobal, 'node@latest');
 
         expect(console.log)
           .toHaveBeenCalledWith('Successfully updated global Node version to ' + LATEST_NODE);
-
-        // TODO: Remove after mocking fs
-        resetGlobalToolsFile();
       });
     });
 
@@ -96,22 +124,28 @@ describe('run.js', () => {
 
     describe('Update Node', () => {
       test('Run devEngines node@latest', async () => {
+        mockNodeReleases(mockedAxiosGet);
+        makeCacheListFolder(vol);
+
         await run(!runAsGlobal, 'node@latest');
 
         expect(console.log)
           .toHaveBeenCalledWith('Pin local Node to ' + LATEST_NODE);
       });
 
-      test('Run devEngines node@', async () => {
+      test('Run devEngines node@ without version', async () => {
         await run(!runAsGlobal, 'node@');
 
         expect(console.log)
-          .toHaveBeenCalledWith(helpMessage);
+          .toHaveBeenCalledWith(HELP_MENU);
       });
     });
 
     describe('Update npm', () => {
       test('Run devEngines npm@latest', async () => {
+        mockNpmReleases(mockedAxiosGet);
+        makeCacheListFolder(vol);
+
         await run(!runAsGlobal, 'npm@latest');
 
         expect(console.log)
@@ -122,7 +156,7 @@ describe('run.js', () => {
         await run(!runAsGlobal, 'npm@');
 
         expect(console.log)
-          .toHaveBeenCalledWith(helpMessage);
+          .toHaveBeenCalledWith(HELP_MENU);
       });
     });
 

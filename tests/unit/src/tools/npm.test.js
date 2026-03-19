@@ -1,12 +1,16 @@
-import { dirname } from 'node:path';
-
 import axios from 'axios';
 import { fs, vol } from 'memfs';
 
 import { files } from '@/pathMap.js';
 import npm from '@/tools/npm.js';
 
+import { LATEST_NPM } from '@@/data/constants.js';
 import { error } from '@@/data/error.js';
+import {
+  makeCacheListFolder,
+  makeCachedNpmReleases,
+  mockNpmReleases
+} from '@@/unit/testHelpers.js';
 
 vi.mock('node:fs', () => {
   return fs;
@@ -20,29 +24,20 @@ vi.mock('axios', () => {
 });
 const mockedAxiosGet = vi.mocked(axios.get);
 
-const cachePath = files.cachedNpmVersions;
-
 describe('npm.js', () => {
   beforeEach(() => {
     vi.resetAllMocks();
     vol.reset();
-    vol.mkdirSync(dirname(cachePath), { recursive: true });
+    makeCacheListFolder(vol);
   });
 
   describe('getLatestReleases', () => {
     test('Fetches once then uses cache', async () => {
-      const data = {
-        versions: {
-          '1.1.0': {},
-          '1.0.0': {}
-        }
-      };
-      const versions = Object.keys(data.versions);
-      mockedAxiosGet.mockResolvedValue({ data });
-
+      makeCachedNpmReleases(vol);
+      const versions = mockNpmReleases(mockedAxiosGet);
       const run1 = await npm.getLatestReleases();
       const run2 = await npm.getLatestReleases();
-      const cache = JSON.parse(fs.readFileSync(cachePath, 'utf8'));
+      const cache = JSON.parse(fs.readFileSync(files.cachedNpmVersions, 'utf8'));
 
       expect(mockedAxiosGet)
         .toHaveBeenCalledTimes(1);
@@ -63,12 +58,7 @@ describe('npm.js', () => {
 
   describe('getCachedReleases', () => {
     test('Loads contents', () => {
-      const contents = {
-        date: Date.now(),
-        data: ['1.0.0']
-      };
-
-      fs.writeFileSync(cachePath, JSON.stringify(contents));
+      const contents = makeCachedNpmReleases(vol);
 
       expect(npm.getCachedReleases())
         .toEqual(contents);
@@ -77,67 +67,40 @@ describe('npm.js', () => {
 
   describe('resolveVersion', () => {
     test('Resolves semver exact versions', async () => {
+      makeCachedNpmReleases(vol);
       const exact = '11.0.0';
-      const contents = {
-        date: Date.now(),
-        data: [exact]
-      };
-
-      fs.writeFileSync(cachePath, JSON.stringify(contents));
-
       const result = await npm.resolveVersion(exact);
 
       expect(result)
         .toEqual(exact);
     });
 
-    test('Resolves "latest" and "lts"', async () => {
-      const latest = '11.11.0';
-      const contents = {
-        date: Date.now(),
-        data: [latest, '11.0.0']
-      };
-
-      fs.writeFileSync(cachePath, JSON.stringify(contents));
-
+    test('Resolves "latest"', async () => {
+      makeCachedNpmReleases(vol);
       const resultLatest = await npm.resolveVersion('latest');
-      const resultLts = await npm.resolveVersion('lts');
 
       expect(resultLatest)
-        .toEqual(latest);
+        .toEqual(LATEST_NPM);
+    });
+
+    test('Resolves "lts"', async () => {
+      makeCachedNpmReleases(vol);
+      const resultLts = await npm.resolveVersion('lts');
 
       expect(resultLts)
-        .toEqual(latest);
+        .toEqual(LATEST_NPM);
     });
 
     test('Resolves semver x-ranges', async () => {
-      const expected = '9.9.4';
-      const contents = {
-        date: Date.now(),
-        data: [
-          '10.0.0',
-          expected,
-          '9.0.0',
-          '8.0.0'
-        ]
-      };
-
-      fs.writeFileSync(cachePath, JSON.stringify(contents));
-
+      makeCachedNpmReleases(vol);
       const result = await npm.resolveVersion('9.x.x');
 
       expect(result)
-        .toEqual(expected);
+        .toEqual('9.9.4');
     });
 
     test('Logs an error if version cannot be resolved', async () => {
-      const contents = {
-        date: Date.now(),
-        data: []
-      };
-
-      fs.writeFileSync(cachePath, JSON.stringify(contents));
-
+      makeCachedNpmReleases(vol);
       const result = await npm.resolveVersion('9001.x.x');
 
       expect(result)
@@ -160,13 +123,7 @@ describe('npm.js', () => {
     });
 
     test('Logs an error if version is invalid', async () => {
-      const contents = {
-        date: Date.now(),
-        data: []
-      };
-
-      fs.writeFileSync(cachePath, JSON.stringify(contents));
-
+      makeCachedNpmReleases(vol);
       const result = await npm.resolveVersion('asdf');
 
       expect(result)

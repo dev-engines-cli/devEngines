@@ -7,6 +7,7 @@ import { writeFileSync } from 'node:fs';
 
 import axios from 'axios';
 import {
+  rcompare,
   satisfies,
   valid,
   validRange
@@ -50,7 +51,6 @@ const getCachedReleases = function () {
  * @return {Promise<NODERELEASES>} List of node releases (or undefined) and a timestamp
  */
 const getLatestReleases = async function () {
-  const nodeVersionsUrl = 'https://nodejs.org/download/release/index.json';
   let cache = getCachedReleases();
   let contents = cache;
   if (cache?.data?.length) {
@@ -61,6 +61,7 @@ const getLatestReleases = async function () {
     }
   }
   try {
+    const nodeVersionsUrl = 'https://nodejs.org/download/release/index.json';
     const response = await axios.get(nodeVersionsUrl);
     const data = response.data.map((release) => {
       return {
@@ -71,14 +72,12 @@ const getLatestReleases = async function () {
         lts: release.lts
       };
     });
-    if (data.length > (cache?.data?.length || 0)) {
-      contents = {
-        date: (new Date()).getTime(),
-        data
-      };
-      const fileContents = JSON.stringify(contents, null, 2) + '\n';
-      writeFileSync(files.cachedNodeVersions, fileContents);
-    }
+    contents = {
+      date: (new Date()).getTime(),
+      data
+    };
+    const fileContents = JSON.stringify(contents, null, 2) + '\n';
+    writeFileSync(files.cachedNodeVersions, fileContents);
   } catch (error) {
     console.log('Error checking for latest Node releases');
     console.log(error);
@@ -96,9 +95,12 @@ const resolveVersion = async function (version) {
   const nodeReleases = await getLatestReleases();
   const nodeVersions = nodeReleases?.data?.map((release) => {
     return release.version;
-  });
+  }).sort(rcompare);
 
-  if (version === 'latest') {
+  if (
+    version === 'latest' &&
+    nodeVersions[0]
+  ) {
     return nodeVersions[0];
   }
 

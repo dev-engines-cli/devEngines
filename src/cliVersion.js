@@ -2,7 +2,7 @@
  * @file Outputs the devEngines CLI version number.
  */
 
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 
 import { files } from './pathMap.js';
 
@@ -12,13 +12,15 @@ import { files } from './pathMap.js';
  * @return {string} The version number or error message
  */
 export const getCliVersion = function () {
-  let version;
+  let version = '[Error checking devEngines CLI version]';
   try {
-    const manifestData = readFileSync(files.projectManifest);
-    const manifest = JSON.parse(manifestData);
-    version = 'v' + manifest.version;
+    if (existsSync(files.projectManifest)) {
+      const manifestData = readFileSync(files.projectManifest);
+      const manifest = JSON.parse(manifestData);
+      version = 'v' + manifest.version;
+    }
   } catch {
-    version = '[Error checking devEngines CLI version]';
+    //
   }
   return version;
 };

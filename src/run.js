@@ -47,7 +47,6 @@ const updateTool = async function (tool, version, isGlobal) {
  * @param {boolean} isGlobal  If the user requested a global install with -g
  */
 export const updateAllTools = async function (arg, isGlobal) {
-  // TODO: handle isGlobal
   // TODO: look up what tools the package.json:devEngines use
   // TODO: Update Node and/or npm versions in the package.json:devEngines after resolved
   if (arg === 'lts') {
