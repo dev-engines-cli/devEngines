@@ -1,5 +1,3 @@
-import { dirname } from 'node:path';
-
 import { fs, vol } from 'memfs';
 
 import {
@@ -9,6 +7,7 @@ import {
 import { files } from '@/pathMap.js';
 
 import { error } from '@@/data/error.js';
+import { makeGlobalToolsDummyData } from '@@/unit/testHelpers.js';
 
 vi.mock('node:fs', () => {
   return {
@@ -23,20 +22,15 @@ vi.mock('node:fs', () => {
   };
 });
 
-const globalToolsDummyData = Object.freeze({
-  node: '25.0.0',
-  npm: '11.0.0'
-});
-
 const globalToolsPath = files.globalTools;
 
 describe('globalTools.js', () => {
+  let globalToolsDummyData;
+
   beforeEach(() => {
     vi.resetAllMocks();
     vol.reset();
-    vol.mkdirSync(dirname(globalToolsPath), { recursive: true });
-    const content = JSON.stringify(globalToolsDummyData, null, 2) + '\n';
-    vol.writeFileSync(globalToolsPath, content);
+    globalToolsDummyData = makeGlobalToolsDummyData(vol);
   });
 
   afterEach(() => {

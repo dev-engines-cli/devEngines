@@ -42,7 +42,6 @@ const getCachedReleases = function () {
  * @return {Promise<NPMRELEASES>} List of npm versions and a timestamp
  */
 const getLatestReleases = async function () {
-  const npmVersionsUrl = 'https://registry.npmjs.org/npm';
   let cache = getCachedReleases();
   let contents = cache;
   if (cache?.data?.length) {
@@ -55,6 +54,7 @@ const getLatestReleases = async function () {
 
   try {
     // TODO: May also need URL that returns release download file names
+    const npmVersionsUrl = 'https://registry.npmjs.org/npm';
     const response = await axios.get(npmVersionsUrl, {
       headers: {
         // accept header is used to send an abbreviated document instead of the full one
@@ -67,14 +67,13 @@ const getLatestReleases = async function () {
     const versions = Object
       .keys(response.data.versions)
       .sort(rcompare);
-    if (versions?.length > (cache?.data?.length || 0)) {
-      contents = {
-        date: (new Date()).getTime(),
-        data: versions
-      };
-      const fileContents = JSON.stringify(contents, null, 2) + '\n';
-      writeFileSync(files.cachedNpmVersions, fileContents);
-    }
+
+    contents = {
+      date: (new Date()).getTime(),
+      data: versions
+    };
+    const fileContents = JSON.stringify(contents, null, 2) + '\n';
+    writeFileSync(files.cachedNpmVersions, fileContents);
   } catch (error) {
     console.log('Error checking for latest npm releases');
     console.log(error);
