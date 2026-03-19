@@ -1,23 +1,46 @@
-import {
-  readFileSync,
-  unlinkSync
-} from 'node:fs';
+import { dirname } from 'node:path';
+
+import { fs, vol } from 'memfs';
 
 import {
   getGlobalToolVersions,
   setGlobalToolVersion
 } from '@/globalTools.js';
+import { files } from '@/pathMap.js';
 
-import {
-  globalToolsPath,
-  globalToolsDummyData,
-  resetGlobalToolsFile
-} from '@@/unit/testHelpers.js';
+import { error } from '@@/data/error.js';
+
+vi.mock('node:fs', () => {
+  return {
+    ...fs,
+    writeFileSync: vi.fn((file, data) => {
+      if (global.writeFileSyncShouldThrow) {
+        throw error;
+      } else {
+        return fs.writeFileSync(file, data);
+      }
+    })
+  };
+});
+
+const globalToolsDummyData = Object.freeze({
+  node: '25.0.0',
+  npm: '11.0.0'
+});
+
+const globalToolsPath = files.globalTools;
 
 describe('globalTools.js', () => {
+  beforeEach(() => {
+    vi.resetAllMocks();
+    vol.reset();
+    vol.mkdirSync(dirname(globalToolsPath), { recursive: true });
+    const content = JSON.stringify(globalToolsDummyData, null, 2) + '\n';
+    vol.writeFileSync(globalToolsPath, content);
+  });
+
   afterEach(() => {
-    // TODO: remove after mock-fs setup
-    resetGlobalToolsFile();
+    global.writeFileSyncShouldThrow = false;
   });
 
   describe('getGlobalToolVersions', () => {
@@ -34,7 +57,7 @@ describe('globalTools.js', () => {
     });
 
     test('Does not find the globalTools.json', () => {
-      unlinkSync(globalToolsPath);
+      vol.unlinkSync(globalToolsPath);
 
       expect(getGlobalToolVersions())
         .toEqual({
@@ -52,7 +75,7 @@ describe('globalTools.js', () => {
     test('Does not change the file if tool is invalid', () => {
       setGlobalToolVersion('asdf', '1.0.0');
 
-      expect(JSON.parse(readFileSync(globalToolsPath)))
+      expect(JSON.parse(vol.readFileSync(globalToolsPath)))
         .toEqual(globalToolsDummyData);
     });
 
@@ -64,7 +87,7 @@ describe('globalTools.js', () => {
       setGlobalToolVersion('pnpm', '5.0.0');
       setGlobalToolVersion('yarn', '6.0.0');
 
-      expect(JSON.parse(readFileSync(globalToolsPath)))
+      expect(JSON.parse(vol.readFileSync(globalToolsPath)))
         .toEqual({
           bun: '1.0.0',
           deno: '2.0.0',
@@ -73,6 +96,15 @@ describe('globalTools.js', () => {
           pnpm: '5.0.0',
           yarn: '6.0.0'
         });
+    });
+
+    test('Catches failure to write to file system', () => {
+      global.writeFileSyncShouldThrow = true;
+
+      setGlobalToolVersion('node', '24.0.0');
+
+      expect(console.log)
+        .toHaveBeenCalledWith('Error setting Node to 24.0.0 in:\n' + globalToolsPath);
     });
   });
 });

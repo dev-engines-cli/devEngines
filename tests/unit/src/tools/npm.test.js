@@ -1,9 +1,12 @@
-import { dirname, join } from 'node:path';
+import { dirname } from 'node:path';
 
 import axios from 'axios';
 import { fs, vol } from 'memfs';
 
+import { files } from '@/pathMap.js';
 import npm from '@/tools/npm.js';
+
+import { error } from '@@/data/error.js';
 
 vi.mock('node:fs', () => fs);
 vi.mock('axios', () => ({
@@ -13,8 +16,7 @@ vi.mock('axios', () => ({
 }));
 const mockedAxiosGet = vi.mocked(axios.get);
 
-const __dirname = import.meta.dirname;
-const cachePath = join(__dirname, '..', '..', '..', '..', 'cacheLists', 'npmVersions.json');
+const cachePath = files.cachedNpmVersions;
 
 describe('npm.js', () => {
   beforeEach(() => {
@@ -133,6 +135,18 @@ describe('npm.js', () => {
       fs.writeFileSync(cachePath, JSON.stringify(contents));
 
       const result = await npm.resolveVersion('9001.x.x');
+
+      expect(result)
+        .toEqual(undefined);
+
+      expect(console.log)
+        .toHaveBeenCalledWith('Desired npm version cannot be found.');
+    });
+
+    test('Logs an error if network call fails and cache is missing', async () => {
+      mockedAxiosGet.mockRejectedValue(error);
+
+      const result = await npm.resolveVersion('latest');
 
       expect(result)
         .toEqual(undefined);

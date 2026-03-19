@@ -6,6 +6,7 @@ import { execSync } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { cwd } from 'node:process';
 
 import { logger } from './logger.js';
 
@@ -13,6 +14,7 @@ import { logger } from './logger.js';
 
 /** @type {STATE} */
 const state = {
+  cwd: cwd(),
   homeDirectory: undefined,
   dotDevEnginesPath: undefined,
   devEnginesCliManifestPath: undefined,

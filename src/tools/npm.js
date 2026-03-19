@@ -4,7 +4,6 @@
  */
 
 import { writeFileSync } from 'node:fs';
-import { join } from 'node:path';
 
 import axios from 'axios';
 import {
@@ -18,10 +17,7 @@ import {
   API_COOL_DOWN,
   loadJsonFile
 } from '../helpers.js';
-
-const __dirname = import.meta.dirname;
-
-const npmVersionsPath = join(__dirname, '..', '..', 'cacheLists', 'npmVersions.json');
+import { files } from '../pathMap.js';
 
 /**
  * @typedef  {object}   NPMRELEASES
@@ -35,7 +31,7 @@ const npmVersionsPath = join(__dirname, '..', '..', 'cacheLists', 'npmVersions.j
  * @return {NPMRELEASES} List of npm versions with timestamp
  */
 const getCachedReleases = function () {
-  return loadJsonFile(npmVersionsPath);
+  return loadJsonFile(files.cachedNpmVersions);
 };
 
 /**
@@ -77,7 +73,7 @@ const getLatestReleases = async function () {
         data: versions
       };
       const fileContents = JSON.stringify(contents, null, 2) + '\n';
-      writeFileSync(npmVersionsPath, fileContents);
+      writeFileSync(files.cachedNpmVersions, fileContents);
     }
   } catch (error) {
     console.log('Error checking for latest npm releases');
@@ -96,7 +92,10 @@ const resolveVersion = async function (desiredVersion) {
   const npmReleases = await getLatestReleases();
   const npmVersions = npmReleases?.data || [];
 
-  if (desiredVersion === 'latest') {
+  if (
+    desiredVersion === 'latest' &&
+    npmVersions[0]
+  ) {
     return npmVersions[0];
   }
 

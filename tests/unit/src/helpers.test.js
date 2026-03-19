@@ -1,6 +1,7 @@
 import {
   determineEndOfLineCharacter,
-  determineIndentation
+  determineIndentation,
+  getToolTitleCase
 } from '@/helpers.js';
 
 describe('helpers.js', () => {
@@ -18,6 +19,34 @@ describe('helpers.js', () => {
 
       expect(determineEndOfLineCharacter(data))
         .toEqual(eol);
+    });
+  });
+
+  describe('getToolTitleCase', () => {
+    test('Returns all titles', () => {
+      expect(getToolTitleCase('node'))
+        .toEqual('Node');
+
+      expect(getToolTitleCase('bun'))
+        .toEqual('Bun');
+
+      expect(getToolTitleCase('deno'))
+        .toEqual('Deno');
+
+      expect(getToolTitleCase('node'))
+        .toEqual('Node');
+
+      expect(getToolTitleCase('npm'))
+        .toEqual('npm');
+
+      expect(getToolTitleCase('pnpm'))
+        .toEqual('PNPM');
+
+      expect(getToolTitleCase('yarn'))
+        .toEqual('Yarn');
+
+      expect(getToolTitleCase('FAKE_TOOL_NAME'))
+        .toEqual('FAKE_TOOL_NAME');
     });
   });
 

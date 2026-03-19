@@ -58,7 +58,7 @@ export const updateAllTools = async function (arg, isGlobal) {
     }
   } else if (arg === 'latest') {
     if (isGlobal) {
-      console.log('Pin global to LTS');
+      console.log('Pin global to latest');
     } else {
       console.log('Pin local to latest');
     }

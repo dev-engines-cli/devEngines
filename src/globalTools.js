@@ -7,17 +7,14 @@ import {
   readFileSync,
   writeFileSync
 } from 'node:fs';
-import { join } from 'node:path';
 
 import {
   getToolTitleCase,
   supportedTools
 } from './helpers.js';
+import { files } from './pathMap.js';
 
 /** @typedef {import('./types.js').TOOL} TOOL */
-
-const __dirname = import.meta.dirname;
-const globalToolsPath = join(__dirname, '..', 'globalTools.json');
 
 /**
  * @typedef  {object} GLOBALTOOLS
@@ -37,14 +34,14 @@ const globalToolsPath = join(__dirname, '..', 'globalTools.json');
 export const getGlobalToolVersions = function () {
   let globalToolsExist = false;
   try {
-    globalToolsExist = existsSync(globalToolsPath);
+    globalToolsExist = existsSync(files.globalTools);
   } catch {
     // do nothing
   }
   let globalToolsFileData;
   if (globalToolsExist) {
     try {
-      globalToolsFileData = String(readFileSync(globalToolsPath));
+      globalToolsFileData = String(readFileSync(files.globalTools));
       globalToolsFileData = JSON.parse(globalToolsFileData);
     } catch {
       // do nothing
@@ -81,10 +78,10 @@ export const setGlobalToolVersion = function (tool, version) {
     const data = JSON.stringify(globalTools, null, 2) + '\n';
     const title = getToolTitleCase(tool);
     try {
-      writeFileSync(globalToolsPath, data);
+      writeFileSync(files.globalTools, data);
       console.log('Successfully updated global ' + title + ' version to ' + version);
     } catch (error) {
-      console.log('Error setting ' + title + ' to ' + version + ' in:\n' + globalToolsPath);
+      console.log('Error setting ' + title + ' to ' + version + ' in:\n' + files.globalTools);
       console.log(error);
     }
   }

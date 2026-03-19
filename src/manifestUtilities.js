@@ -17,6 +17,8 @@ import {
   supportedTools
 } from './helpers.js';
 
+// TODO: Because monorepos, we should verify the devEngines field exists
+//       in the found manifest, and if not, continue looking.
 /**
  * Recursively looks for the package.json file in the current directory
  * and each parent directory until it finds it, hits the system root,
