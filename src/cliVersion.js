@@ -3,25 +3,18 @@
  */
 
 import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
 
-const __dirname = import.meta.dirname;
+import { files } from './pathMap.js';
 
 /**
  * Returns the version number defined in the devEngines CLI package.json.
  *
- * @param  {boolean} forceThrow  Only used for test coverage
- * @return {string}              The version number or error message
+ * @return {string} The version number or error message
  */
-export const getCliVersion = function (forceThrow) {
+export const getCliVersion = function () {
   let version;
   try {
-    // TODO: Remove when mock-fs working in tests
-    if (forceThrow) {
-      throw 'error';
-    }
-    const manifestPath = join(__dirname, '..', 'package.json');
-    const manifestData = readFileSync(manifestPath);
+    const manifestData = readFileSync(files.projectManifest);
     const manifest = JSON.parse(manifestData);
     version = 'v' + manifest.version;
   } catch {
