@@ -16,6 +16,9 @@ import {
   supportedPackageManagers,
   supportedTools
 } from './helpers.js';
+import { resolveToolVersion } from './tools/registeredTools.js';
+
+/** @typedef {import('./types.js').TOOL} TOOL */
 
 // TODO: Because monorepos, we should verify the devEngines field exists
 //       in the found manifest, and if not, continue looking.
@@ -135,14 +138,20 @@ export const getRawToolVersions = function () {
       if (Array.isArray(manifest.devEngines[type])) {
         manifest.devEngines[type].forEach((tool) => {
           if (tool?.name && tool?.version) {
-            versions[tool.name.toLowerCase()] = tool.version;
+            let toolName = tool.name.toLowerCase();
+            if (supportedTools.includes(toolName)) {
+              versions[toolName] = tool.version;
+            }
           }
         });
       } else if (
         manifest.devEngines[type].name &&
         manifest.devEngines[type].version
       ) {
-        versions[manifest.devEngines[type].name.toLowerCase()] = manifest.devEngines[type].version;
+        let toolName = manifest.devEngines[type].name.toLowerCase();
+        if (supportedTools.includes(toolName)) {
+          versions[toolName] = manifest.devEngines[type].version;
+        }
       }
     }
   }
@@ -151,15 +160,39 @@ export const getRawToolVersions = function () {
   return versions;
 };
 
+/**
+ * @typedef  {object} RESOLVEDVERSIONS
+ * @property {string} [node]            The exact resolved Node.js version
+ * @property {string} [deno]            The exact resolved Deno version
+ * @property {string} [bun]             The exact resolved Bun version
+ * @property {string} [npm]             The exact resolved npm version
+ * @property {string} [pnpm]            The exact resolved pnpm version
+ * @property {string} [yarn]            The exact resolved Yarn version
+ */
+
+/**
+ * Returns an object of the exact resolved versions for each tool.
+ *
+ * @return {RESOLVEDVERSIONS} Exact resolved versions of all devEngine tools
+ */
+export const getResolvedToolVersions = async function () {
+  const rawVersions = getRawToolVersions();
+  const resolvedVersions = {};
+  for (const toolName in rawVersions) {
+    const rawVersion = rawVersions[toolName];
+    resolvedVersions[toolName] = await resolveToolVersion(toolName, rawVersion);
+  }
+  return resolvedVersions;
+};
+
 /** @typedef {'runtime'|'packageManager'} SUBSECTION */
-/** @typedef {'node'|'npm'|'bun'|'deno'|'pnpm'|'yarn'} TOOLNAME*/
 
 /**
  * Sets the tool version in the manifest.
  *
  * @param {object}     manifest    The user's parsed package.json.
  * @param {SUBSECTION} subSection  The sub-section to set in the devEngines
- * @param {TOOLNAME}   name        The desired tool to pin in devEngines
+ * @param {TOOL}       name        The desired tool to pin in devEngines
  * @param {string}     version     The desired version to pin in devEngines
  */
 export const mutateManifest = function (manifest, subSection, name, version) {
@@ -192,7 +225,7 @@ export const mutateManifest = function (manifest, subSection, name, version) {
  * correct sub-section. Handles existing object or arrays.
  *
  * @param {SUBSECTION} subSection  The sub-section to set in the devEngines
- * @param {TOOLNAME}   name        The desired tool to pin in devEngines
+ * @param {TOOL}       name        The desired tool to pin in devEngines
  * @param {string}     version     The desired version to pin in devEngines
  */
 const setDevEnginesSubSection = function (subSection, name, version) {
@@ -218,8 +251,8 @@ const setDevEnginesSubSection = function (subSection, name, version) {
 /**
  * Sets a value in the devEngines field in the user's package.json.
  *
- * @param {TOOLNAME} tool     The desired tool to pin in devEngines
- * @param {string}   version  The desired version to pin in devEngines
+ * @param {TOOL}   tool     The desired tool to pin in devEngines
+ * @param {string} version  The desired version to pin in devEngines
  */
 export const setToolInDevEngines = function (tool, version) {
   // Because 'bun' can appear in both, they are non-exclusionary

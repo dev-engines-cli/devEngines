@@ -7,9 +7,7 @@ import { setGlobalToolVersion } from './globalTools.js';
 import { showHelpMenu } from './helpMenu.js';
 import { supportedTools } from './helpers.js';
 import { setToolInDevEngines } from './manifestUtilities.js';
-import node from './tools/node.js';
-import npm from './tools/npm.js';
-import unsupported from './tools/unsupportedTool.js';
+import { resolveToolVersion } from './tools/registeredTools.js';
 
 /**
  * Update a tool, like Node or npm.
@@ -19,13 +17,7 @@ import unsupported from './tools/unsupportedTool.js';
  * @param {boolean} isGlobal  User requested a global install with -g
  */
 const updateTool = async function (tool, version, isGlobal) {
-  const toolMap = {
-    node,
-    npm
-  };
-  const toolHelpers = toolMap[tool] || unsupported;
-  let desiredVersion = version;
-  let resolvedVersion = await toolHelpers.resolveVersion(desiredVersion);
+  let resolvedVersion = await resolveToolVersion(tool, version);
   if (isGlobal) {
     setGlobalToolVersion(tool, resolvedVersion);
   } else {
