@@ -9,7 +9,7 @@ import {
   getToolTitleCase,
   supportedTools
 } from './helpers.js';
-// import { setToolInDevEngines } from './manifestUtilities.js';
+import { setToolInDevEngines } from './manifestUtilities.js';
 import node from './tools/node.js';
 import npm from './tools/npm.js';
 import unsupported from './tools/unsupportedTool.js';
@@ -33,9 +33,7 @@ const updateTool = async function (tool, version, isGlobal) {
   if (isGlobal) {
     setGlobalToolVersion(tool, resolvedVersion);
   } else {
-    console.log('Pin local ' + titleCase + ' to ' + resolvedVersion);
-    // TODO: Uncomment once mock-fs in tests
-    // setToolInDevEngines(tool, resolvedVersion);
+    setToolInDevEngines(tool, resolvedVersion);
   }
 };
 
