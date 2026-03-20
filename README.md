@@ -1,7 +1,7 @@
 
 ## WIP
 
-> The following is an API mockup, the code for it is not fully implemented.
+> The devEngines CLI is a work in progress, it is not finished yet, see the Tasks section for progress.
 
 
 # devEngines CLI
@@ -119,7 +119,15 @@ JavaScript tooling management.
 Tracking the project's progress.
 
 * [ ] Installer:
-  * [ ] Needs unit tests for existing code (`/tests/unit/installer/*`)
+  * [x] Evaluate different tech stacks
+    * [x] Bun Build <-- winner
+    * [x] Node SEA
+    * [x] Deno compile
+    * [x] ~Neutralino~
+    * [x] ~Batch/SH~
+    * [x] ~NW.js~
+  * [x] Automated GHA builds for all platforms
+  * [ ] 100% test coverage (`/tests/unit/installer/*` not created yet)
   * [ ] Handle existing installs of devEngines CLI
     * [x] keep
     * [x] upgrade
@@ -155,3 +163,13 @@ Tracking the project's progress.
   * [ ] Download/unzip correct Node/npm versions
   * [ ] Run original command with arguments through the shim
   * [ ] Purge tool downloads (`devEngines purge`)
+
+
+* * *
+
+
+## Team
+
+[lewxdev](https://github.com/lewxdev) | [sime-time](https://github.com/sime-time) | [TheJaredWilcurt](https://github.com/TheJaredWilcurt)
+:--: | :--: | :--:
+[![lewxdev](https://avatars.githubusercontent.com/u/6710419?size=100)](https://github.com/lewxdev) | [![sime-time](https://avatars.githubusercontent.com/u/76657534?size=100)](https://github.com/sime-time) | [![TheJaredWilcurt](https://avatars.githubusercontent.com/u/4629794?size=100)](https://github.com/TheJaredWilcurt) 
