@@ -163,3 +163,11 @@ Tracking the project's progress.
   * [ ] Download/unzip correct Node/npm versions
   * [ ] Run original command with arguments through the shim
   * [ ] Purge tool downloads (`devEngines purge`)
+     
+* * *
+
+## Team
+
+[lewxdev](https://github.com/lewxdev) | [sime-time](https://github.com/sime-time) | [TheJaredWilcurt](https://github.com/TheJaredWilcurt)
+:--: | :--: | :--:
+[![lewxdev](https://avatars.githubusercontent.com/u/6710419?size=100)](https://github.com/lewxdev) | [![sime-time](https://avatars.githubusercontent.com/u/76657534?size=100)](https://github.com/sime-time) | [![TheJaredWilcurt](https://avatars.githubusercontent.com/u/4629794?size=100)](https://github.com/TheJaredWilcurt) 
