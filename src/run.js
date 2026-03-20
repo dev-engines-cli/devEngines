@@ -5,10 +5,7 @@
 import { getCliVersion } from './cliVersion.js';
 import { setGlobalToolVersion } from './globalTools.js';
 import { showHelpMenu } from './helpMenu.js';
-import {
-  getToolTitleCase,
-  supportedTools
-} from './helpers.js';
+import { supportedTools } from './helpers.js';
 import { setToolInDevEngines } from './manifestUtilities.js';
 import node from './tools/node.js';
 import npm from './tools/npm.js';
@@ -22,7 +19,6 @@ import unsupported from './tools/unsupportedTool.js';
  * @param {boolean} isGlobal  User requested a global install with -g
  */
 const updateTool = async function (tool, version, isGlobal) {
-  const titleCase = getToolTitleCase(tool);
   const toolMap = {
     node,
     npm
