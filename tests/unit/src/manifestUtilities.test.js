@@ -1,22 +1,37 @@
 import { join } from 'node:path';
 
+import axios from 'axios';
 import { fs, vol } from 'memfs';
 
 import {
   findManifest,
   getManifestData,
   getRawToolVersions,
+  getResolvedToolVersions,
   mutateManifest,
   setToolInDevEngines
 } from '@/manifestUtilities.js';
 import { files } from '@/pathMap.js';
 
-import { makeProjectManifest } from '@@/unit/testHelpers.js';
+import { LATEST_NODE } from '@@/data/constants.js';
+import {
+  makeCacheListFolder,
+  makeCachedNodeReleases,
+  makeProjectManifest,
+  mockNodeReleases
+} from '@@/unit/testHelpers.js';
 
 vi.mock('node:fs', () => {
   return fs;
 });
-
+vi.mock('axios', () => {
+  return {
+    default: {
+      get: vi.fn()
+    }
+  };
+});
+const mockedAxiosGet = vi.mocked(axios.get);
 const __dirname = import.meta.dirname;
 
 describe('manifestUtilities.js', () => {
@@ -203,6 +218,56 @@ describe('manifestUtilities.js', () => {
 
       expect(getRawToolVersions())
         .toEqual({});
+    });
+
+    test('Skips unsupported tools (object)', () => {
+      makeProjectManifest(vol, {
+        devEngines: {
+          runtime: {
+            name: 'fake',
+            version: '1.0.0'
+          }
+        }
+      });
+
+      expect(getRawToolVersions())
+        .toEqual({});
+    });
+
+    test('Skips unsupported tools (array)', () => {
+      makeProjectManifest(vol, {
+        devEngines: {
+          runtime: [
+            {
+              name: 'fake',
+              version: '1.0.0'
+            }
+          ]
+        }
+      });
+
+      expect(getRawToolVersions())
+        .toEqual({});
+    });
+  });
+
+  describe('getResolvedToolVersions', () => {
+    test('Resolve Node version', async () => {
+      makeCacheListFolder(vol);
+      makeCachedNodeReleases(vol);
+      mockNodeReleases(mockedAxiosGet);
+      makeProjectManifest(vol, {
+        devEngines: {
+          runtime: {
+            name: 'node',
+            version: '>25.0.0'
+          }
+        }
+      });
+      const versions = await getResolvedToolVersions();
+
+      expect(versions)
+        .toEqual({ node: LATEST_NODE });
     });
   });
 

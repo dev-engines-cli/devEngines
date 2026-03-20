@@ -30,6 +30,7 @@ export const makeCacheListFolder = function (vol) {
  * @return {object}      The dummy data
  */
 export const makeCachedNodeReleases = function (vol) {
+  makeCacheListFolder(vol);
   const contents = JSON.stringify(nodeReleasesDummyData, null, 2) + '\n';
   vol.writeFileSync(files.cachedNodeVersions, contents);
   return nodeReleasesDummyData;
@@ -42,6 +43,7 @@ export const makeCachedNodeReleases = function (vol) {
  * @return {object}      The dummy data
  */
 export const makeCachedNpmReleases = function (vol) {
+  makeCacheListFolder(vol);
   const contents = JSON.stringify(npmReleasesDummyData, null, 2) + '\n';
   vol.writeFileSync(files.cachedNpmVersions, contents);
   return npmReleasesDummyData;
