@@ -1,7 +1,4 @@
-import {
-  join,
-  resolve
-} from 'node:path';
+import { join } from 'node:path';
 
 import { fs, vol } from 'memfs';
 
@@ -35,6 +32,7 @@ describe('manifestUtilities.js', () => {
       expect(findManifest())
         .toEqual(files.projectManifest);
     });
+
     test('Hits max attempts', () => {
       const deepPath = join(
         __dirname,
@@ -65,27 +63,22 @@ describe('manifestUtilities.js', () => {
         '1',
         '0'
       );
-      vol.mkdirSync(process.cwd(), { recursive: true });
       makeProjectManifest(vol);
       vol.mkdirSync(deepPath, { recursive: true });
 
       expect(findManifest(deepPath))
         .toEqual(undefined);
     });
-    /*
 
     test('Hits system root', () => {
-      process.chdir(join(__dirname, '..', '..', '..', '..'));
-
       expect(findManifest())
         .toEqual(undefined);
     });
-    */
   });
 
-  /*
   describe('getManifestData', () => {
     test('Returns the manifest as JSON', () => {
+      makeProjectManifest(vol);
       const data = getManifestData();
 
       expect(typeof(data) === 'object')
@@ -98,18 +91,16 @@ describe('manifestUtilities.js', () => {
         .toEqual(2);
 
       expect(data.manifestPath)
-        .toEqual(resolve('..', '..', '..', 'package.json'));
+        .toEqual(files.projectManifest);
 
       expect(typeof(data.manifest) === 'object')
         .toEqual(true);
 
       expect(data.manifest.name)
-        .toEqual('dev-engines');
+        .toEqual('dummy-manifest');
     });
 
     test('Returns empty object if manifest not found', () => {
-      process.chdir(join(__dirname, '..', '..', '..', '..'));
-
       const data = getManifestData();
 
       expect(data)
@@ -124,7 +115,18 @@ describe('manifestUtilities.js', () => {
 
   describe('getRawToolVersions', () => {
     test('Returns common versions', () => {
-      process.chdir(join(__dirname, '..', '..', 'data', 'dummyNodeNpmVersions'));
+      makeProjectManifest(vol, {
+        devEngines: {
+          runtime: {
+            name: 'node',
+            version: '25.0.0'
+          },
+          packageManager: {
+            name: 'npm',
+            version: '11.0.0'
+          }
+        }
+      });
 
       expect(getRawToolVersions())
         .toEqual({
@@ -134,7 +136,44 @@ describe('manifestUtilities.js', () => {
     });
 
     test('Returns array versions', () => {
-      process.chdir(join(__dirname, '..', '..', 'data', 'dummyNodeNpmArrayVersions'));
+      makeProjectManifest(vol, {
+        devEngines: {
+          runtime: [
+            {
+              name: 'node',
+              version: '25.0.0'
+            },
+            {
+              name: 'deno',
+              version: '2.0.0'
+            },
+            {
+              name: 'bun',
+              version: '1.0.0'
+            },
+            {
+              name: 'missing version'
+            }
+          ],
+          packageManager: [
+            {
+              name: 'npm',
+              version: '11.0.0'
+            },
+            {
+              name: 'pnpm',
+              version: '3.0.0'
+            },
+            {
+              name: 'yarn',
+              version: '2.0.0'
+            },
+            {
+              version: 'missing name'
+            }
+          ]
+        }
+      });
 
       expect(getRawToolVersions())
         .toEqual({
@@ -148,14 +187,19 @@ describe('manifestUtilities.js', () => {
     });
 
     test('Returns empty object when devEngines missing', () => {
-      process.chdir(join(__dirname, '..', '..', 'data', 'dummyNoDevEngines'));
+      makeProjectManifest(vol, {});
 
       expect(getRawToolVersions())
         .toEqual({});
     });
 
     test('Returns empty object when no versions defined', () => {
-      process.chdir(join(__dirname, '..', '..', 'data', 'dummyNoVersions'));
+      makeProjectManifest(vol, {
+        devEngines: {
+          runtime: {},
+          packageManager: {}
+        }
+      });
 
       expect(getRawToolVersions())
         .toEqual({});
@@ -302,38 +346,6 @@ describe('manifestUtilities.js', () => {
     });
 
     test('Logs when no manifest found', () => {
-      process.chdir(
-        join(
-          __dirname,
-          '..',
-          '..',
-          'data',
-          '22',
-          '21',
-          '20',
-          '19',
-          '18',
-          '17',
-          '16',
-          '15',
-          '14',
-          '13',
-          '12',
-          '11',
-          '10',
-          '9',
-          '8',
-          '7',
-          '6',
-          '5',
-          '4',
-          '3',
-          '2',
-          '1',
-          '0'
-        )
-      );
-
       setToolInDevEngines('node', '11.0.0');
 
       expect(console.log)
@@ -343,27 +355,13 @@ describe('manifestUtilities.js', () => {
     });
 
     describe('Set versions in file without devEngines', () => {
-      const setVersionsPath = join(__dirname, '..', '..', 'data', 'setVersions');
-      const setVersionsManifestPath = join(setVersionsPath, 'package.json');
-
-      function resetDummyFile () {
-        const data = JSON.stringify({ name: 'set-versions' }, null, 2);
-        vol.writeFileSync(setVersionsManifestPath, data + '\n');
-      }
       function checkDummyFile () {
-        return String(vol.readFileSync(setVersionsManifestPath)).trim();
+        return String(vol.readFileSync(files.projectManifest)).trim();
       }
-
-      beforeEach(() => {
-        process.chdir(setVersionsPath);
-        resetDummyFile();
-      });
-
-      afterEach(() => {
-        resetDummyFile();
-      });
 
       test('Sets node@25.0.0', () => {
+        makeProjectManifest(vol, { name: 'set-versions' });
+
         expect(checkDummyFile())
           .toEqual([
             '{',
@@ -388,6 +386,8 @@ describe('manifestUtilities.js', () => {
       });
 
       test('Sets npm@11.0.0', () => {
+        makeProjectManifest(vol, { name: 'set-versions' });
+
         expect(checkDummyFile())
           .toEqual([
             '{',
@@ -412,5 +412,4 @@ describe('manifestUtilities.js', () => {
       });
     });
   });
-  */
 });
