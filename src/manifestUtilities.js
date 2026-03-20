@@ -127,7 +127,7 @@ export const getManifestData = function () {
 export const getRawToolVersions = function () {
   const { manifest } = getManifestData();
   let versions = {};
-  function setVersionFromDevEngines (type) {
+  function getVersionFromDevEngines (type) {
     if (
       manifest?.devEngines &&
       manifest.devEngines[type]
@@ -146,8 +146,8 @@ export const getRawToolVersions = function () {
       }
     }
   }
-  setVersionFromDevEngines('runtime');
-  setVersionFromDevEngines('packageManager');
+  getVersionFromDevEngines('runtime');
+  getVersionFromDevEngines('packageManager');
   return versions;
 };
 

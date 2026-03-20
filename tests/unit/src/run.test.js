@@ -27,7 +27,6 @@ vi.mock('axios', () => {
     }
   };
 });
-makeProjectManifest(vol);
 const mockedAxiosGet = vi.mocked(axios.get);
 
 describe('run.js', () => {

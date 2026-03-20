@@ -67,14 +67,16 @@ export const makeGlobalToolsDummyData = function (vol) {
 /**
  * Creates a mock package.json file.
  *
- * @param {object} vol  memfs vol instance
+ * @param {object} vol       memfs vol instance
+ * @param {object} manifest  Optional JSON for the manifest
  */
-export const makeProjectManifest = function (vol) {
+export const makeProjectManifest = function (vol, manifest) {
   const data = {
-    name: 'DummyManifest',
+    name: 'dummy-manifest',
     version: CLI_VERSION.replace('v', '')
   };
-  const contents = JSON.stringify(data, null, 2) + '\n';
+  manifest = manifest || data;
+  const contents = JSON.stringify(manifest, null, 2) + '\n';
   vol.mkdirSync(dirname(files.projectManifest), { recursive: true });
   vol.writeFileSync(files.projectManifest, contents);
 };
