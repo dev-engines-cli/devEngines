@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { fs, vol } from 'memfs';
 
+import { files } from '@/pathMap.js';
 import { run, updateAllTools } from '@/run.js';
 
 import {
@@ -125,11 +126,19 @@ describe('run.js', () => {
       test('Run devEngines node@latest', async () => {
         mockNodeReleases(mockedAxiosGet);
         makeCacheListFolder(vol);
+        makeProjectManifest(vol, {});
 
         await run(!runAsGlobal, 'node@latest');
 
-        expect(console.log)
-          .toHaveBeenCalledWith('Pin local Node to ' + LATEST_NODE);
+        expect(JSON.parse(vol.readFileSync(files.projectManifest)))
+          .toEqual({
+            devEngines: {
+              runtime: {
+                name: 'node',
+                version: LATEST_NODE
+              }
+            }
+          });
       });
 
       test('Run devEngines node@ without version', async () => {
@@ -144,11 +153,19 @@ describe('run.js', () => {
       test('Run devEngines npm@latest', async () => {
         mockNpmReleases(mockedAxiosGet);
         makeCacheListFolder(vol);
+        makeProjectManifest(vol, {});
 
         await run(!runAsGlobal, 'npm@latest');
 
-        expect(console.log)
-          .toHaveBeenCalledWith('Pin local npm to ' + LATEST_NPM);
+        expect(JSON.parse(vol.readFileSync(files.projectManifest)))
+          .toEqual({
+            devEngines: {
+              packageManager: {
+                name: 'npm',
+                version: LATEST_NPM
+              }
+            }
+          });
       });
 
       test('Run devEngines npm@', async () => {
