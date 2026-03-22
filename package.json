@@ -13,7 +13,9 @@
     "outdated": "npm outdated"
   },
   "dependencies": {
+    "@guoyunhe/downloader": "^1.5.0",
     "axios": "^1.13.6",
+    "progress-bar-capture": "^1.0.0",
     "semver": "^7.7.4"
   },
   "devDependencies": {
