@@ -1,8 +1,11 @@
+/**
+ * @file Temp file to manually test download/unzip/progress bar code.
+ */
+
 import { download } from '@guoyunhe/downloader';
 import { ProgressBar } from 'progress-bar-capture';
 
-
-const asdf = async function () {
+const downloadAndUnzip = async function () {
   const progressBar = new ProgressBar({
   });
   // Some servers give you a total size usable to get a percent
@@ -30,10 +33,8 @@ const asdf = async function () {
   if (initialized) {
     await progressBar.update(100).finish();
   }
-}
+};
 
 console.log('START');
-await asdf();
-setTimeout(() => {
-  console.log('DONE');
-}, 0);
+await downloadAndUnzip();
+console.log('DONE');
