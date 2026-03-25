@@ -77,12 +77,14 @@ export const ensureFolderExists = function (folder) {
   try {
     folderExists = existsSync(folder);
   } catch {
+    /* v8 ignore next */
     console.log('Error checking for ' + folderName + ' folder.');
   }
   if (!folderExists) {
     try {
       mkdirSync(folder, { recursive: true });
     } catch {
+      /* v8 ignore next */
       console.log('Error creating ' + folderName + ' folder.');
     }
   }

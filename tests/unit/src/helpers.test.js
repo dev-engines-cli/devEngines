@@ -1,10 +1,27 @@
+import { dirname } from 'node:path';
+
+import { fs, vol } from 'memfs';
+
 import {
   determineEndOfLineCharacter,
   determineIndentation,
+  ensureFolderExists,
   getToolTitleCase
 } from '@/helpers.js';
+import { files } from '@/pathMap.js';
+
+import { makeCacheListFolder } from '@@/unit/testHelpers.js';
+
+vi.mock('node:fs', () => {
+  return fs;
+});
 
 describe('helpers.js', () => {
+  beforeEach(() => {
+    vi.resetAllMocks();
+    vol.reset();
+  });
+
   describe('determineEndOfLineCharacter', () => {
     test.each([
       ['CRLF', '\r\n'],
@@ -19,6 +36,40 @@ describe('helpers.js', () => {
 
       expect(determineEndOfLineCharacter(data))
         .toEqual(eol);
+    });
+  });
+
+  describe('ensureFolderExists', () => {
+    test('Folder already exists', () => {
+      makeCacheListFolder(vol);
+
+      const folder = dirname(files.cachedNodeVersions);
+
+      expect(vol.existsSync(folder))
+        .toEqual(true);
+
+      ensureFolderExists(folder);
+
+      expect(vol.existsSync(folder))
+        .toEqual(true);
+
+      expect(console.log)
+        .not.toHaveBeenCalled();
+    });
+
+    test('Creates folder already exists', () => {
+      const folder = dirname(files.cachedNodeVersions);
+
+      expect(vol.existsSync(folder))
+        .toEqual(false);
+
+      ensureFolderExists(folder);
+
+      expect(vol.existsSync(folder))
+        .toEqual(true);
+
+      expect(console.log)
+        .not.toHaveBeenCalled();
     });
   });
 
