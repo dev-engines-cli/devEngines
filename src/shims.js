@@ -16,6 +16,7 @@ import { getResolvedToolVersions } from './manifestUtilities.js';
 export const runShim = async function (tool) {
   if (!supportedTools.includes(tool)) {
     console.log('Unsupported tool: ' + tool);
+    return;
   }
 
   const resolvedVersions = await getResolvedToolVersions();
