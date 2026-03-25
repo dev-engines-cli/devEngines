@@ -17,6 +17,7 @@ const config = defineConfig({
   test: {
     coverage: {
       exclude: [
+        './src/shims.js',
         './src/types.js'
       ],
       include: [

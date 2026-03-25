@@ -1,3 +1,7 @@
+/**
+ * @file Reusable generic shims function.
+ */
+
 import { getGlobalToolVersions } from './globalTools.js';
 import { supportedTools } from './helpers.js';
 import { getResolvedToolVersions } from './manifestUtilities.js';
@@ -25,5 +29,5 @@ export const runShim = async function (tool) {
     }
   }
 
-  console.log({ args: process.argv });
+  console.log(process.argv.slice(2));
 };
