@@ -200,7 +200,7 @@ export const createNodeDownloadUrl = function (version) {
   ].join('/');
 
   return url;
-}
+};
 
 /**
  * TODO: Download Node version.
