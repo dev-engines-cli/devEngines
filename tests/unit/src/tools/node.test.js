@@ -2,7 +2,7 @@ import axios from 'axios';
 import { fs, vol } from 'memfs';
 
 import { files } from '@/pathMap.js';
-import node from '@/tools/node.js';
+import node, { createNodeDownloadUrl } from '@/tools/node.js';
 
 import { LATEST_NODE } from '@@/data/constants.js';
 import { error } from '@@/data/error.js';
@@ -12,8 +12,21 @@ import {
   mockNodeReleases
 } from '@@/unit/testHelpers.js';
 
+let arch = 'x64';
+let platform = 'linux';
+
 vi.mock('node:fs', () => {
   return fs;
+});
+vi.mock('node:os', () => {
+  return {
+    arch: vi.fn(() => {
+      return arch;
+    }),
+    platform: vi.fn(() => {
+      return platform;
+    })
+  };
 });
 vi.mock('axios', () => {
   return {
@@ -29,6 +42,32 @@ describe('node.js', () => {
     vi.resetAllMocks();
     vol.reset();
     makeCacheListFolder(vol);
+  });
+
+  describe('createNodeDownloadUrl', () => {
+    test('Creates Node.js download url for Linux', () => {
+      arch = 'x64';
+      platform = 'linux';
+
+      expect(createNodeDownloadUrl('22.22.2'))
+        .toEqual('https://nodejs.org/dist/v22.22.2/node-v22.22.2-linux-x64.tar.gz');
+    });
+
+    test('Creates Node.js download url for OSX', () => {
+      arch = 'arm64';
+      platform = 'darwin';
+
+      expect(createNodeDownloadUrl('22.22.2'))
+        .toEqual('https://nodejs.org/dist/v22.22.2/node-v22.22.2-darwin-arm64.tar.gz');
+    });
+
+    test('Creates Node.js download url for Windows', () => {
+      arch = 'x64';
+      platform = 'win32';
+
+      expect(createNodeDownloadUrl('22.22.2'))
+        .toEqual('https://nodejs.org/dist/v22.22.2/node-v22.22.2-win-x64.zip');
+    });
   });
 
   describe('getLatestReleases', () => {

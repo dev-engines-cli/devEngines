@@ -8,6 +8,10 @@ import {
   writeFileSync
 } from 'node:fs';
 import {
+  arch,
+  platform
+} from 'node:os';
+import {
   dirname,
   join
 } from 'node:path';
@@ -158,6 +162,46 @@ const isVersionInstalled = function (version) {
 };
 
 /**
+ * Creates the Node.js download URL based on the OS, Arch, and Node version.
+ *
+ * @example
+ * https://nodejs.org/dist/v25.0.0/node-v25.0.0-darwin-arm64.tar.gz
+ * https://nodejs.org/dist/v25.0.0/node-v25.0.0-linux-x64.tar.gz
+ * https://nodejs.org/dist/v25.0.0/node-v25.0.0-win-x64.zip
+ *
+ * @param  {string} version  The exact resolved version of Node to download
+ * @return {string}          The URL to download that version of Node for the current OS
+ */
+export const createNodeDownloadUrl = function (version) {
+  const os = platform();
+  const architecture = arch();
+
+  let osForUrl = os;
+  let extension = 'tar.gz';
+
+  if (os === 'win32') {
+    osForUrl = 'win';
+    extension = 'zip';
+  }
+  const fileName = [
+    'node',
+    'v' + version,
+    osForUrl,
+    architecture
+  ].join('-');
+  const file = fileName + '.' + extension;
+
+  const url = [
+    'https://nodejs.org',
+    'dist',
+    'v' + version,
+    file
+  ].join('/');
+
+  return url;
+}
+
+/**
  * TODO: Download Node version.
  *
  * @param {string} version  Node version to download
@@ -166,6 +210,9 @@ const download = function (version) {
   if (isVersionInstalled(version)) {
     return;
   }
+
+  // const url = createNodeDownloadUrl(version);
+
   console.log('STUB: download');
 };
 
