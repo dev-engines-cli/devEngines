@@ -140,3 +140,5 @@ vite.config.ts.timestamp-*
 
 # devEngines CLI Node/npm cache folder
 cache/
+tools/
+localNode/

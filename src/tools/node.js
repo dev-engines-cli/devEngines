@@ -3,7 +3,11 @@
  *       resolve a given Node version to an exact version.
  */
 
-import { writeFileSync } from 'node:fs';
+import {
+  existsSync,
+  writeFileSync
+} from 'node:fs';
+import { join } from 'node:path';
 
 import axios from 'axios';
 import {
@@ -17,7 +21,7 @@ import {
   API_COOL_DOWN,
   loadJsonFile
 } from '../helpers.js';
-import { files } from '../pathMap.js';
+import { files, folders } from '../pathMap.js';
 
 /**
  * @typedef  {object}   NODERELEASE
@@ -131,7 +135,38 @@ const resolveVersion = async function (version) {
   return undefined;
 };
 
+/**
+ * Check if a given version is already downloaded.
+ *
+ * @param  {string}  version  Node version to check for
+ * @return {boolean}          true = exists
+ */
+const isVersionInstalled = function (version) {
+  let exists = false;
+  try {
+    // TODO: Add in a more comprehensive check
+    exists = existsSync(join(folders.nodeInstalls, version));
+  } catch {
+    console.log('Error checking Node install path');
+  }
+  return exists;
+};
+
+/**
+ * TODO: Download Node version.
+ *
+ * @param {string} version  Node version to download
+ */
+const download = function (version) {
+  if (isVersionInstalled(version)) {
+    return;
+  }
+  console.log('STUB: download');
+};
+
 export default {
+  download,
+  isVersionInstalled,
   getCachedReleases,
   getLatestReleases,
   resolveVersion
