@@ -146,6 +146,7 @@ const isVersionInstalled = function (version) {
     // TODO: Add in a more comprehensive check
     exists = existsSync(join(folders.npmInstalls, version));
   } catch {
+    /* v8 ignore next */
     console.log('Error checking npm install path');
   }
   return exists;

@@ -144,15 +144,17 @@ describe('node.js', () => {
   });
 
   describe('isVersionInstalled', () => {
+    const version = '22.22.2';
+
     test('Location does not exist', () => {
-      expect(node.isVersionInstalled('22.22.2'))
+      expect(node.isVersionInstalled(version))
         .toEqual(false);
     });
 
     test('Location does exist', () => {
-      vol.mkdirSync(join(folders.nodeInstalls, '22.22.2'), { recursive: true });
+      vol.mkdirSync(join(folders.nodeInstalls, version), { recursive: true });
 
-      expect(node.isVersionInstalled('22.22.2'))
+      expect(node.isVersionInstalled(version))
         .toEqual(true);
     });
   });
