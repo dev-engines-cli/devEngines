@@ -156,6 +156,7 @@ const isVersionInstalled = function (version) {
     // TODO: Add in a more comprehensive check
     exists = existsSync(join(folders.nodeInstalls, version));
   } catch {
+    /* v8 ignore next */
     console.log('Error checking Node install path');
   }
   return exists;

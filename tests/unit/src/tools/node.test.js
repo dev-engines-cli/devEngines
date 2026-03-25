@@ -1,7 +1,9 @@
+import { join } from 'node:path';
+
 import axios from 'axios';
 import { fs, vol } from 'memfs';
 
-import { files } from '@/pathMap.js';
+import { files, folders } from '@/pathMap.js';
 import node, { createNodeDownloadUrl } from '@/tools/node.js';
 
 import { LATEST_NODE } from '@@/data/constants.js';
@@ -70,6 +72,24 @@ describe('node.js', () => {
     });
   });
 
+  describe('download', () => {
+    test('Logs stub', () => {
+      node.download('22.22.2');
+
+      expect(console.log)
+        .toHaveBeenCalledWith('STUB: download');
+    });
+
+    test('Returns early if download not needed', () => {
+      vol.mkdirSync(join(folders.nodeInstalls, '22.22.2'), { recursive: true });
+
+      node.download('22.22.2');
+
+      expect(console.log)
+        .not.toHaveBeenCalled();
+    });
+  });
+
   describe('getLatestReleases', () => {
     test('Network call fails', async () => {
       const contents = makeCachedNodeReleases(vol);
@@ -120,6 +140,20 @@ describe('node.js', () => {
 
       expect(node.getCachedReleases())
         .toEqual(contents);
+    });
+  });
+
+  describe('isVersionInstalled', () => {
+    test('Location does not exist', () => {
+      expect(node.isVersionInstalled('22.22.2'))
+        .toEqual(false);
+    });
+
+    test('Location does exist', () => {
+      vol.mkdirSync(join(folders.nodeInstalls, '22.22.2'), { recursive: true });
+
+      expect(node.isVersionInstalled('22.22.2'))
+        .toEqual(true);
     });
   });
 
