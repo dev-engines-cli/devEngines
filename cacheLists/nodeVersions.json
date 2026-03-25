@@ -1,6 +1,30 @@
 {
-  "date": 1773498722677,
+  "date": 1774401716213,
   "data": [
+    {
+      "version": "25.8.2",
+      "date": "2026-03-24",
+      "files": [
+        "aix-ppc64",
+        "headers",
+        "linux-arm64",
+        "linux-ppc64le",
+        "linux-s390x",
+        "linux-x64",
+        "osx-arm64-tar",
+        "osx-x64-pkg",
+        "osx-x64-tar",
+        "src",
+        "win-arm64-7z",
+        "win-arm64-zip",
+        "win-x64-7z",
+        "win-x64-exe",
+        "win-x64-msi",
+        "win-x64-zip"
+      ],
+      "npm": "11.11.1",
+      "lts": false
+    },
     {
       "version": "25.8.1",
       "date": "2026-03-10",
@@ -288,6 +312,30 @@
       ],
       "npm": "11.6.2",
       "lts": false
+    },
+    {
+      "version": "24.14.1",
+      "date": "2026-03-24",
+      "files": [
+        "aix-ppc64",
+        "headers",
+        "linux-arm64",
+        "linux-ppc64le",
+        "linux-s390x",
+        "linux-x64",
+        "osx-arm64-tar",
+        "osx-x64-pkg",
+        "osx-x64-tar",
+        "src",
+        "win-arm64-7z",
+        "win-arm64-zip",
+        "win-x64-7z",
+        "win-x64-exe",
+        "win-x64-msi",
+        "win-x64-zip"
+      ],
+      "npm": "11.11.0",
+      "lts": "Krypton"
     },
     {
       "version": "24.14.0",
@@ -1118,6 +1166,35 @@
       ],
       "npm": "10.9.0",
       "lts": false
+    },
+    {
+      "version": "22.22.2",
+      "date": "2026-03-24",
+      "files": [
+        "aix-ppc64",
+        "headers",
+        "linux-arm64",
+        "linux-armv7l",
+        "linux-ppc64le",
+        "linux-s390x",
+        "linux-x64",
+        "osx-arm64-tar",
+        "osx-x64-pkg",
+        "osx-x64-tar",
+        "src",
+        "win-arm64-7z",
+        "win-arm64-zip",
+        "win-x64-7z",
+        "win-x64-exe",
+        "win-x64-msi",
+        "win-x64-zip",
+        "win-x86-7z",
+        "win-x86-exe",
+        "win-x86-msi",
+        "win-x86-zip"
+      ],
+      "npm": "10.9.7",
+      "lts": "Jod"
     },
     {
       "version": "22.22.1",
@@ -2365,6 +2442,35 @@
       ],
       "npm": "10.2.0",
       "lts": false
+    },
+    {
+      "version": "20.20.2",
+      "date": "2026-03-24",
+      "files": [
+        "aix-ppc64",
+        "headers",
+        "linux-arm64",
+        "linux-armv7l",
+        "linux-ppc64le",
+        "linux-s390x",
+        "linux-x64",
+        "osx-arm64-tar",
+        "osx-x64-pkg",
+        "osx-x64-tar",
+        "src",
+        "win-arm64-7z",
+        "win-arm64-zip",
+        "win-x64-7z",
+        "win-x64-exe",
+        "win-x64-msi",
+        "win-x64-zip",
+        "win-x86-7z",
+        "win-x86-exe",
+        "win-x86-msi",
+        "win-x86-zip"
+      ],
+      "npm": "10.8.2",
+      "lts": "Iron"
     },
     {
       "version": "20.20.1",
