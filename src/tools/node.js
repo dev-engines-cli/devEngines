@@ -7,7 +7,10 @@ import {
   existsSync,
   writeFileSync
 } from 'node:fs';
-import { join } from 'node:path';
+import {
+  dirname,
+  join
+} from 'node:path';
 
 import axios from 'axios';
 import {
@@ -19,6 +22,7 @@ import {
 
 import {
   API_COOL_DOWN,
+  ensureFolderExists,
   loadJsonFile
 } from '../helpers.js';
 import { files, folders } from '../pathMap.js';
@@ -44,6 +48,7 @@ import { files, folders } from '../pathMap.js';
  * @return {NODERELEASES} List of node releases with timestamp
  */
 const getCachedReleases = function () {
+  ensureFolderExists(dirname(files.cachedNodeVersions));
   return loadJsonFile(files.cachedNodeVersions);
 };
 

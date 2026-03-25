@@ -4,8 +4,10 @@
 
 import {
   existsSync,
+  mkdirSync,
   readFileSync
 } from 'node:fs';
+import { basename } from 'node:path';
 
 /** @typedef {import('./types.js').TOOL} TOOL */
 
@@ -62,6 +64,30 @@ export const determineIndentation = function (string) {
     return spaceCount;
   }
   return 2;
+};
+
+/**
+ * Checks if a folder exists and if not, creates it.
+ *
+ * @param {string} folder  Path to the folder
+ */
+export const ensureFolderExists = function (folder) {
+  let folderName = basename(folder);
+  let folderExists = false;
+  try {
+    folderExists = existsSync(folder);
+  } catch {
+    /* v8 ignore next */
+    console.log('Error checking for ' + folderName + ' folder.');
+  }
+  if (!folderExists) {
+    try {
+      mkdirSync(folder, { recursive: true });
+    } catch {
+      /* v8 ignore next */
+      console.log('Error creating ' + folderName + ' folder.');
+    }
+  }
 };
 
 /**
