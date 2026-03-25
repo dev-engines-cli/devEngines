@@ -73,17 +73,19 @@ describe('node.js', () => {
   });
 
   describe('download', () => {
+    const version = '22.22.2';
+
     test('Logs stub', () => {
-      node.download('22.22.2');
+      node.download(version);
 
       expect(console.log)
         .toHaveBeenCalledWith('STUB: download');
     });
 
     test('Returns early if download not needed', () => {
-      vol.mkdirSync(join(folders.nodeInstalls, '22.22.2'), { recursive: true });
+      vol.mkdirSync(join(folders.nodeInstalls, version), { recursive: true });
 
-      node.download('22.22.2');
+      node.download(version);
 
       expect(console.log)
         .not.toHaveBeenCalled();
