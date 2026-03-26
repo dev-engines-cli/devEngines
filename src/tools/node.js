@@ -3,11 +3,22 @@
  *       resolve a given Node version to an exact version.
  */
 
-import { writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import {
+  existsSync,
+  writeFileSync
+} from 'node:fs';
+import {
+  arch,
+  platform
+} from 'node:os';
+import {
+  dirname,
+  join
+} from 'node:path';
 
 import axios from 'axios';
 import {
+  rcompare,
   satisfies,
   valid,
   validRange
@@ -15,12 +26,10 @@ import {
 
 import {
   API_COOL_DOWN,
+  ensureFolderExists,
   loadJsonFile
 } from '../helpers.js';
-
-const __dirname = import.meta.dirname;
-
-const nodeVersionsPath = join(__dirname, '..', '..', 'cacheLists', 'nodeVersions.json');
+import { files, folders } from '../pathMap.js';
 
 /**
  * @typedef  {object}   NODERELEASE
@@ -43,7 +52,8 @@ const nodeVersionsPath = join(__dirname, '..', '..', 'cacheLists', 'nodeVersions
  * @return {NODERELEASES} List of node releases with timestamp
  */
 const getCachedReleases = function () {
-  return loadJsonFile(nodeVersionsPath);
+  ensureFolderExists(dirname(files.cachedNodeVersions));
+  return loadJsonFile(files.cachedNodeVersions);
 };
 
 /**
@@ -51,10 +61,9 @@ const getCachedReleases = function () {
  * last 10 seconds and if so, returns it. Otherwise downloads the latest
  * version and updates the nodeVersions.json cache.
  *
- * @return {NODERELEASES} List of node releases (or undefined) and a timestamp
+ * @return {Promise<NODERELEASES>} List of node releases (or undefined) and a timestamp
  */
 const getLatestReleases = async function () {
-  const nodeVersionsUrl = 'https://nodejs.org/download/release/index.json';
   let cache = getCachedReleases();
   let contents = cache;
   if (cache?.data?.length) {
@@ -65,6 +74,7 @@ const getLatestReleases = async function () {
     }
   }
   try {
+    const nodeVersionsUrl = 'https://nodejs.org/download/release/index.json';
     const response = await axios.get(nodeVersionsUrl);
     const data = response.data.map((release) => {
       return {
@@ -75,14 +85,12 @@ const getLatestReleases = async function () {
         lts: release.lts
       };
     });
-    if (data.length > (cache?.data?.length || 0)) {
-      contents = {
-        date: (new Date()).getTime(),
-        data
-      };
-      const fileContents = JSON.stringify(contents, null, 2) + '\n';
-      writeFileSync(nodeVersionsPath, fileContents);
-    }
+    contents = {
+      date: (new Date()).getTime(),
+      data
+    };
+    const fileContents = JSON.stringify(contents, null, 2) + '\n';
+    writeFileSync(files.cachedNodeVersions, fileContents);
   } catch (error) {
     console.log('Error checking for latest Node releases');
     console.log(error);
@@ -93,16 +101,19 @@ const getLatestReleases = async function () {
 /**
  * Finds an exact version number based on the desired version passed in.
  *
- * @param  {string} version  A version (`22`, `>=24.0.0`, `lts`, etc)
- * @return {string}          An exact version number (`24.1.0`)
+ * @param  {string}                    version  A version (`22`, `>=24.0.0`, `lts`, etc)
+ * @return {Promise<string|undefined>}          An exact version number (`24.1.0`)
  */
 const resolveVersion = async function (version) {
   const nodeReleases = await getLatestReleases();
   const nodeVersions = nodeReleases?.data?.map((release) => {
     return release.version;
-  });
+  }).sort(rcompare);
 
-  if (version === 'latest') {
+  if (
+    version === 'latest' &&
+    nodeVersions[0]
+  ) {
     return nodeVersions[0];
   }
 
@@ -130,9 +141,82 @@ const resolveVersion = async function (version) {
   }
 
   console.log('Desired Node version cannot be found.');
+  return undefined;
+};
+
+/**
+ * Check if a given version is already downloaded.
+ *
+ * @param  {string}  version  Node version to check for
+ * @return {boolean}          true = exists
+ */
+const isVersionInstalled = function (version) {
+  let exists = false;
+  try {
+    // TODO: Add in a more comprehensive check
+    exists = existsSync(join(folders.nodeInstalls, version));
+  } catch {
+    /* v8 ignore next */
+    console.log('Error checking Node install path');
+  }
+  return exists;
+};
+
+/**
+ * Creates the Node.js download URL based on the OS, Arch, and Node version.
+ *
+ * @example
+ * https://nodejs.org/dist/v25.0.0/node-v25.0.0-darwin-arm64.tar.gz
+ * https://nodejs.org/dist/v25.0.0/node-v25.0.0-linux-x64.tar.gz
+ * https://nodejs.org/dist/v25.0.0/node-v25.0.0-win-x64.zip
+ *
+ * @param  {string} version  The exact resolved version of Node to download
+ * @return {string}          The URL to download that version of Node for the current OS
+ */
+export const createNodeDownloadUrl = function (version) {
+  let osForUrl = platform();
+  let extension = 'tar.gz';
+
+  if (osForUrl === 'win32') {
+    osForUrl = 'win';
+    extension = 'zip';
+  }
+  const fileName = [
+    'node',
+    'v' + version,
+    osForUrl,
+    arch()
+  ].join('-');
+  const file = fileName + '.' + extension;
+
+  const url = [
+    'https://nodejs.org',
+    'dist',
+    'v' + version,
+    file
+  ].join('/');
+
+  return url;
+};
+
+/**
+ * TODO: Download Node version.
+ *
+ * @param {string} version  Node version to download
+ */
+const download = function (version) {
+  if (isVersionInstalled(version)) {
+    return;
+  }
+
+  // const url = createNodeDownloadUrl(version);
+
+  console.log('STUB: download');
 };
 
 export default {
+  download,
+  isVersionInstalled,
   getCachedReleases,
   getLatestReleases,
   resolveVersion

@@ -1,22 +1,62 @@
+import axios from 'axios';
+import { fs, vol } from 'memfs';
+
+import { files } from '@/pathMap.js';
 import { run, updateAllTools } from '@/run.js';
 
-import { CLI_VERSION, HELP_MENU } from '@@/data/constants.js';
+import {
+  CLI_VERSION,
+  HELP_MENU,
+  LATEST_NODE,
+  LATEST_NPM
+} from '@@/data/constants.js';
+import {
+  makeCacheListFolder,
+  makeGlobalToolsDummyData,
+  makeProjectManifest,
+  mockNodeReleases,
+  mockNpmReleases
+} from '@@/unit/testHelpers.js';
+
+vi.mock('node:fs', () => {
+  return fs;
+});
+vi.mock('axios', () => {
+  return {
+    default: {
+      get: vi.fn()
+    }
+  };
+});
+const mockedAxiosGet = vi.mocked(axios.get);
 
 describe('run.js', () => {
+  const runAsGlobal = true;
+
+  beforeEach(() => {
+    vi.resetAllMocks();
+    vol.reset();
+    makeProjectManifest(vol);
+  });
+
   describe('run', () => {
     describe('Global installs', () => {
       test('Global without argument', async () => {
-        await run(true);
+        await run(runAsGlobal);
 
         expect(console.log)
           .toHaveBeenCalledWith('Missing an argument after -g');
       });
 
       test('Global with argument', async () => {
-        await run(true, 'node@latest');
+        mockNodeReleases(mockedAxiosGet);
+        makeCacheListFolder(vol);
+        makeGlobalToolsDummyData(vol);
+
+        await run(runAsGlobal, 'node@latest');
 
         expect(console.log)
-          .toHaveBeenCalledWith('Global install of node@latest');
+          .toHaveBeenCalledWith('Successfully updated global Node version to ' + LATEST_NODE);
       });
     });
 
@@ -24,28 +64,28 @@ describe('run.js', () => {
       const version = 'devEngines ' + CLI_VERSION;
 
       test('Argument --version', async () => {
-        await run(false, '--version');
+        await run(!runAsGlobal, '--version');
 
         expect(console.log)
           .toHaveBeenCalledWith(version);
       });
 
       test('Argument -v', async () => {
-        await run(false, '-v');
+        await run(!runAsGlobal, '-v');
 
         expect(console.log)
           .toHaveBeenCalledWith(version);
       });
 
       test('Argument v', async () => {
-        await run(false, 'v');
+        await run(!runAsGlobal, 'v');
 
         expect(console.log)
           .toHaveBeenCalledWith(version);
       });
 
       test('Argument version', async () => {
-        await run(false, 'version');
+        await run(!runAsGlobal, 'version');
 
         expect(console.log)
           .toHaveBeenCalledWith(version);
@@ -53,65 +93,102 @@ describe('run.js', () => {
     });
 
     describe('Update all tools', () => {
-      test('LTS', async () => {
-        await run(false, 'lts');
+      test('Pin local to LTS', async () => {
+        await run(!runAsGlobal, 'lts');
 
         expect(console.log)
           .toHaveBeenCalledWith('Pin local to LTS');
       });
 
-      test('Latest', async () => {
-        await run(false, 'latest');
+      test('Pin local to Latest', async () => {
+        await run(!runAsGlobal, 'latest');
 
         expect(console.log)
           .toHaveBeenCalledWith('Pin local to latest');
+      });
+
+      test('Pin global to LTS', async () => {
+        await run(runAsGlobal, 'lts');
+
+        expect(console.log)
+          .toHaveBeenCalledWith('Pin global to LTS');
+      });
+
+      test('Pin global to latest', async () => {
+        await run(runAsGlobal, 'latest');
+
+        expect(console.log)
+          .toHaveBeenCalledWith('Pin global to latest');
       });
     });
 
     describe('Update Node', () => {
       test('Run devEngines node@latest', async () => {
-        await run(false, 'node@latest');
+        mockNodeReleases(mockedAxiosGet);
+        makeCacheListFolder(vol);
+        makeProjectManifest(vol, {});
 
-        expect(console.log)
-          .toHaveBeenCalledWith('Pin local Node to 25.6.1');
+        await run(!runAsGlobal, 'node@latest');
+
+        expect(JSON.parse(vol.readFileSync(files.projectManifest)))
+          .toEqual({
+            devEngines: {
+              runtime: {
+                name: 'node',
+                version: LATEST_NODE
+              }
+            }
+          });
       });
 
-      test('Run devEngines node@', async () => {
-        await run(false, 'node@');
+      test('Run devEngines node@ without version', async () => {
+        await run(!runAsGlobal, 'node@');
 
         expect(console.log)
-          .toHaveBeenCalledWith([
-            'Missing Node version, try:',
-            'devEngines [toolname]@[version]',
-            'Like this:',
-            'devEngines node@latest'
-          ].join('\n'));
+          .toHaveBeenCalledWith(HELP_MENU);
       });
     });
 
     describe('Update npm', () => {
       test('Run devEngines npm@latest', async () => {
-        await run(false, 'npm@latest');
+        mockNpmReleases(mockedAxiosGet);
+        makeCacheListFolder(vol);
+        makeProjectManifest(vol, {});
 
-        expect(console.log)
-          .toHaveBeenCalledWith('Pin local npm to 11.10.1');
+        await run(!runAsGlobal, 'npm@latest');
+
+        expect(JSON.parse(vol.readFileSync(files.projectManifest)))
+          .toEqual({
+            devEngines: {
+              packageManager: {
+                name: 'npm',
+                version: LATEST_NPM
+              }
+            }
+          });
       });
 
       test('Run devEngines npm@', async () => {
-        await run(false, 'npm@');
+        await run(!runAsGlobal, 'npm@');
 
         expect(console.log)
-          .toHaveBeenCalledWith([
-            'Missing npm version, try:',
-            'devEngines [toolname]@[version]',
-            'Like this:',
-            'devEngines npm@latest'
-          ].join('\n'));
+          .toHaveBeenCalledWith(HELP_MENU);
       });
     });
 
+    test('Unsupported tool', async () => {
+      // TODO: The "unsupportTool" stuff is just a stub until
+      //       Deno, Bun, Yarn, PNPM can all be support.
+      //       Once that is the case this test, that file,
+      //       and code related to it, can be removed.
+      await run(!runAsGlobal, 'yarn@1.0.0');
+
+      expect(console.log)
+        .toHaveBeenCalledWith('Tool unsupported');
+    });
+
     test('Fallback to help menu', async () => {
-      await run(false);
+      await run();
 
       expect(console.log)
         .toHaveBeenCalledWith(HELP_MENU);

@@ -4,8 +4,91 @@
 
 import {
   existsSync,
+  mkdirSync,
   readFileSync
 } from 'node:fs';
+import { basename } from 'node:path';
+
+/** @typedef {import('./types.js').TOOL} TOOL */
+
+/**
+ * Detects CRLF, CR, or LF line endings in a string and
+ * returns what it found.
+ *
+ * @param  {string}           string  Any string, presumed read from file
+ * @return {'\r\n'|'\r'|'\n'}         The first line ending found, fallsback to \n
+ */
+export const determineEndOfLineCharacter = function (string) {
+  if (string.includes('\r\n')) {
+    return '\r\n';
+  }
+  if (string.includes('\r')) {
+    return '\r';
+  }
+  return '\n';
+};
+
+/**
+ * Detects the amount of indentation used in a string.
+ *
+ * @param  {string}      string  Any string, presumed read from file
+ * @return {number|'\t'}         The number or spaces or '\t' for tab
+ */
+export const determineIndentation = function (string) {
+  const eol = determineEndOfLineCharacter(string);
+  const firstIndentedLine = string
+    .split(eol)
+    .find((line) => {
+      return (
+        line.startsWith('\t') ||
+        line.startsWith(' ')
+      );
+    });
+
+  if (firstIndentedLine) {
+    if (firstIndentedLine.startsWith('\t')) {
+      return '\t';
+    }
+    const characters = firstIndentedLine.split('');
+    let spaceCount = 0;
+    let nonSpaceFound = false;
+    for (let i = 0; i < characters.length; i++) {
+      const character = characters[i];
+      if (character !== ' ') {
+        nonSpaceFound = true;
+      }
+      if (!nonSpaceFound) {
+        spaceCount = spaceCount + 1;
+      }
+    }
+    return spaceCount;
+  }
+  return 2;
+};
+
+/**
+ * Checks if a folder exists and if not, creates it.
+ *
+ * @param {string} folder  Path to the folder
+ */
+export const ensureFolderExists = function (folder) {
+  let folderName = basename(folder);
+  let folderExists = false;
+  try {
+    folderExists = existsSync(folder);
+  } catch {
+    /* v8 ignore next */
+    console.log('Error checking for ' + folderName + ' folder.');
+  }
+  if (!folderExists) {
+    try {
+      mkdirSync(folder, { recursive: true });
+    } catch {
+      /* v8 ignore next */
+      console.log('Error creating ' + folderName + ' folder.');
+    }
+  }
+};
 
 /**
  * @typedef  {object}   CACHEDDATA
@@ -39,9 +122,44 @@ export const loadJsonFile = function (filePath) {
 };
 
 /**
+ * Takes in a lowercase tool name and returns it as the officially
+ * cased brand orthography.
+ *
+ * @param  {TOOL}   tool  Lowercase tool name
+ * @return {string}       Title case tool name
+ */
+export const getToolTitleCase = function (tool) {
+  const titleMap = {
+    bun: 'Bun',
+    deno: 'Deno',
+    node: 'Node',
+    npm: 'npm',
+    pnpm: 'PNPM',
+    yarn: 'Yarn'
+  };
+  return titleMap[tool] || tool;
+};
+
+/**
  * This prevents making network calls to API's when we have
  * a recently cached local version that could be used.
  *
  * @type {number}
  */
 export const API_COOL_DOWN = 10 * 1000;
+
+export const supportedRuntimes = Object.freeze([
+  'node',
+  'deno',
+  'bun'
+]);
+export const supportedPackageManagers = Object.freeze([
+  'npm',
+  'bun',
+  'pnpm',
+  'yarn'
+]);
+export const supportedTools = Object.freeze(Array.from(new Set([
+  ...supportedRuntimes,
+  ...supportedPackageManagers
+])));

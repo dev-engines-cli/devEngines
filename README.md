@@ -1,17 +1,25 @@
 
 ## WIP
 
-> The following is an API mockup, the code for it is not fully implemented.
+> The devEngines CLI is a work in progress, it is not finished yet, see the Tasks section for progress.
 
 
 # devEngines CLI
 
 JavaScript tooling management.
 
+* **Fully automatic**
+  * Automatically switches to the correct Node/npm version required by your project.
+  * Downloads the Node/npm versions automatically on first use.
+  * It is impossible to be on the wrong version.
 * **Standards compliant**
   * Uses the official "[devEngines](https://docs.npmjs.com/cli/v11/configuring-npm/package-json#devengines)" standard in the `package.json`.
     * *Used by npm, pnpm, corepack, etc.*
   * The `npm` executable will throw an error if the version used does not match what is defined in the "devEngines" part of the `package.json`.
+* **Focused**
+  * Exclusively supports JavaScript tooling.
+    * Currently just Node and npm, but eventually Deno, Bun, PNPM, and Yarn also.
+  * Streamlined CLI API.
 * **Cross-Platform**
   * Works the same for everyone on your team.
   * One set of setup instructions for everyone.
@@ -20,13 +28,6 @@ JavaScript tooling management.
   * Open source (MIT licensed)
   * Written in JS
   * Can easily be maintained by the JS community
-* **Fully automatic**
-  * Automatically switches to the correct Node/npm version required by your project.
-  * Downloads the Node/npm versions automatically on first use.
-  * It is impossible to be on the wrong version.
-* **Focused**
-  * Exclusively supports JavaScript tooling.
-  * Streamlined CLI API.
 * **100% Test Coverage**
 
 
@@ -108,3 +109,67 @@ JavaScript tooling management.
 1. Delete the cloned repo
    * **Windows:** `rd /s /q devEngines`
    * **Linux/OSX:** `rm -r -f ./devEngines`
+
+
+* * *
+
+
+## Tasks:
+
+Tracking the project's progress.
+
+* [ ] Installer:
+  * [x] Evaluate different tech stacks
+    * [x] Bun Build <-- winner
+    * [x] Node SEA
+    * [x] Deno compile
+    * [x] ~Neutralino~
+    * [x] ~Batch/SH~
+    * [x] ~NW.js~
+  * [x] Automated GHA builds for all platforms
+  * [ ] 100% test coverage (`/tests/unit/installer/*` not created yet)
+  * [ ] Handle existing installs of devEngines CLI
+    * [x] keep
+    * [x] upgrade
+    * [ ] delete
+    * [ ] uninstall
+  * [ ] Offer download Options:
+    * [ ] git clone HTTPS
+    * [ ] git clone SSH
+    * [ ] GitHub CLI
+    * [ ] https zip download options
+  * [ ] Clone repo or Download+Unzip
+  * [ ] Download/unzip correct Node version for the CLI
+  * [ ] Run `npm i`
+  * [ ] Add to PATH
+  * [ ] Remove from PATH (for uninstalls)
+  * [ ] Installation documentation
+* [ ] CLI
+  * [x] Maintain 100% test coverage
+  * [x] Output version number
+  * [x] Show help menu
+  * [x] Pin the node or npm version locally
+    * [x] Download/cache list of available versions
+    * [x] Resolve version
+    * [x] Find manifest
+      * [ ] Handle monorepos
+    * [x] Update manifest devEngines
+    * [x] Get list of tools and their versions from devEngines
+  * [ ] Create Node/npm shims
+    * [ ] node
+    * [ ] npm
+    * [ ] npx
+    * [ ] node-gyp
+  * [ ] Download/unzip correct Node/npm versions
+  * [ ] Run original command with arguments through the shim
+  * [ ] Purge tool downloads (`devEngines purge`)
+
+
+* * *
+
+
+## Team
+
+[lewxdev](https://github.com/lewxdev) | [sime-time](https://github.com/sime-time) | [TheJaredWilcurt](https://github.com/TheJaredWilcurt)
+:--: | :--: | :--:
+[![lewxdev](https://avatars.githubusercontent.com/u/6710419?size=100)](https://github.com/lewxdev) | [![sime-time](https://avatars.githubusercontent.com/u/76657534?size=100)](https://github.com/sime-time) | [![TheJaredWilcurt](https://avatars.githubusercontent.com/u/4629794?size=100)](https://github.com/TheJaredWilcurt) 

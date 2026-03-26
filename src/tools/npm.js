@@ -3,11 +3,18 @@
  *       resolve a given npm version to an exact version.
  */
 
-import { execSync } from 'node:child_process';
-import { writeFileSync } from 'node:fs';
-import { join } from 'node:path';
-
 import {
+  existsSync,
+  writeFileSync
+} from 'node:fs';
+import {
+  dirname,
+  join
+} from 'node:path';
+
+import axios from 'axios';
+import {
+  rcompare,
   satisfies,
   valid,
   validRange
@@ -15,12 +22,10 @@ import {
 
 import {
   API_COOL_DOWN,
+  ensureFolderExists,
   loadJsonFile
 } from '../helpers.js';
-
-const __dirname = import.meta.dirname;
-
-const npmVersionsPath = join(__dirname, '..', '..', 'cacheLists', 'npmVersions.json');
+import { files, folders } from '../pathMap.js';
 
 /**
  * @typedef  {object}   NPMRELEASES
@@ -34,7 +39,8 @@ const npmVersionsPath = join(__dirname, '..', '..', 'cacheLists', 'npmVersions.j
  * @return {NPMRELEASES} List of npm versions with timestamp
  */
 const getCachedReleases = function () {
-  return loadJsonFile(npmVersionsPath);
+  ensureFolderExists(dirname(files.cachedNpmVersions));
+  return loadJsonFile(files.cachedNpmVersions);
 };
 
 /**
@@ -42,9 +48,9 @@ const getCachedReleases = function () {
  * last 10 seconds and if so, returns it. Otherwise downloads the latest
  * version and updates the nodeVersions.json cache.
  *
- * @return {NPMRELEASES} List of npm versions and a timestamp
+ * @return {Promise<NPMRELEASES>} List of npm versions and a timestamp
  */
-const getLatestReleases = function () {
+const getLatestReleases = async function () {
   let cache = getCachedReleases();
   let contents = cache;
   if (cache?.data?.length) {
@@ -56,21 +62,27 @@ const getLatestReleases = function () {
   }
 
   try {
-    // TODO: Replace with regular network call to more easily mock in tests
     // TODO: May also need URL that returns release download file names
-    let versions = execSync('npm view npm versions');
-    versions = String(versions);
-    versions = versions.replaceAll('\'', '"');
-    versions = JSON.parse(versions);
-    versions = versions.reverse();
-    if (versions?.length > (cache?.data?.length || 0)) {
-      contents = {
-        date: (new Date()).getTime(),
-        data: versions
-      };
-      const fileContents = JSON.stringify(contents, null, 2) + '\n';
-      writeFileSync(npmVersionsPath, fileContents);
-    }
+    const npmVersionsUrl = 'https://registry.npmjs.org/npm';
+    const response = await axios.get(npmVersionsUrl, {
+      headers: {
+        // accept header is used to send an abbreviated document instead of the full one
+        // results in a ~90% reduction in response size
+        // see: https://github.com/npm/registry/blob/ae49abf/docs/responses/package-metadata.md
+        Accept: 'application/vnd.npm.install-v1+json; q=1.0, application/json; q=0.8'
+      }
+    });
+    // TODO: Properly parse response data to ensure the data is what we expect
+    const versions = Object
+      .keys(response.data.versions)
+      .sort(rcompare);
+
+    contents = {
+      date: (new Date()).getTime(),
+      data: versions
+    };
+    const fileContents = JSON.stringify(contents, null, 2) + '\n';
+    writeFileSync(files.cachedNpmVersions, fileContents);
   } catch (error) {
     console.log('Error checking for latest npm releases');
     console.log(error);
@@ -81,14 +93,17 @@ const getLatestReleases = function () {
 /**
  * Finds an exact version number based on the desired version passed in.
  *
- * @param  {string} desiredVersion  A version (`9`, `>=9.0.0`, `lts`, etc)
- * @return {string}                 An exact version number (`9.9.4`)
+ * @param  {string}                    desiredVersion  A version (`9`, `>=9.0.0`, `lts`, etc)
+ * @return {Promise<string|undefined>}                 An exact version number (`9.9.4`)
  */
-const resolveVersion = function (desiredVersion) {
-  const npmReleases = getLatestReleases();
+const resolveVersion = async function (desiredVersion) {
+  const npmReleases = await getLatestReleases();
   const npmVersions = npmReleases?.data || [];
 
-  if (desiredVersion === 'latest') {
+  if (
+    desiredVersion === 'latest' &&
+    npmVersions[0]
+  ) {
     return npmVersions[0];
   }
 
@@ -119,7 +134,39 @@ const resolveVersion = function (desiredVersion) {
   return undefined;
 };
 
+/**
+ * Check if a given version is already downloaded.
+ *
+ * @param  {string}  version  npm version to check for
+ * @return {boolean}          true = exists
+ */
+const isVersionInstalled = function (version) {
+  let exists = false;
+  try {
+    // TODO: Add in a more comprehensive check
+    exists = existsSync(join(folders.npmInstalls, version));
+  } catch {
+    /* v8 ignore next */
+    console.log('Error checking npm install path');
+  }
+  return exists;
+};
+
+/**
+ * TODO: Download npm version.
+ *
+ * @param {string} version  npm version to download
+ */
+const download = function (version) {
+  if (isVersionInstalled(version)) {
+    return;
+  }
+  console.log('STUB: download');
+};
+
 export default {
+  download,
+  isVersionInstalled,
   getCachedReleases,
   getLatestReleases,
   resolveVersion

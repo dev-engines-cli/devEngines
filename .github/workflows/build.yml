@@ -1,0 +1,40 @@
+name: Build artifacts
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build-installer:
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - bun-linux-x64
+          - bun-linux-arm64
+          - bun-windows-x64
+          - bun-darwin-x64
+          - bun-darwin-arm64
+          - bun-linux-x64-musl
+          - bun-linux-arm64-musl
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: installer/
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.10
+
+      - run: bun install
+      - run: bun run build ${{ matrix.target }}
+
+      - uses: actions/upload-artifact@v6
+        with:
+          name: ${{ matrix.target }}
+          path: installer/dist/
+          if-no-files-found: error

@@ -2,19 +2,34 @@
  * @file Helper functions regarding package.json files.
  */
 
-import { existsSync, readFileSync } from 'node:fs';
+import {
+  existsSync,
+  readFileSync,
+  writeFileSync
+} from 'node:fs';
 import { join } from 'node:path';
 
-const __dirname = import.meta.dirname;
+import {
+  determineEndOfLineCharacter,
+  determineIndentation,
+  supportedRuntimes,
+  supportedPackageManagers,
+  supportedTools
+} from './helpers.js';
+import { resolveToolVersion } from './tools/registeredTools.js';
 
+/** @typedef {import('./types.js').TOOL} TOOL */
+
+// TODO: Because monorepos, we should verify the devEngines field exists
+//       in the found manifest, and if not, continue looking.
 /**
  * Recursively looks for the package.json file in the current directory
  * and each parent directory until it finds it, hits the system root,
  * or reaches a max retry amount.
  *
- * @param  {string} cwd      File path to look for the package.json in
- * @param  {number} attempt  The current retry we are on
- * @return {string}          The file path to the package.json or empty string if not found
+ * @param  {string}           cwd      File path to look for the package.json in
+ * @param  {number}           attempt  The current retry we are on
+ * @return {string|undefined}          The file path to the package.json if found
  */
 export const findManifest = function (cwd, attempt) {
   cwd = cwd || process.cwd();
@@ -39,69 +54,62 @@ export const findManifest = function (cwd, attempt) {
     cwd === newCwd ||
     attempt === 0
   ) {
-    return '';
+    return undefined;
   }
   return findManifest(newCwd, attempt - 1);
 };
 
 /**
- * @typedef  {object} GLOBALTOOLS
- * @property {string} [node]       The global Node version, if set
- * @property {string} [npm]        The global npm version, if set
+ * @typedef  {object}           MANIFESTDATA
+ * @property {'\n'|'\r'|'\r\n'} eol           The end of line delimeter
+ * @property {number|'\t'}      indentation   The indentation type used
+ * @property {object}           manifest      The parsed version of package.json
+ * @property {string}           manifestPath  The absolute file location
  */
-
-/**
- * Returns the global tool version user settings, if possible.
- *
- * @return {GLOBALTOOLS} The user's global versions for tools.
- */
-export const getGlobalToolVersions = function () {
-  const globalToolsPath = join(__dirname, '..', 'globalTools.json');
-  let globalToolsExist = false;
-  try {
-    globalToolsExist = existsSync(globalToolsPath);
-  } catch {
-    // do nothing
-  }
-  let globalTools;
-  if (globalToolsExist) {
-    try {
-      globalTools = readFileSync(globalToolsPath);
-      globalTools = JSON.parse(globalTools);
-    } catch {
-      // do nothing
-    }
-  }
-
-  if (
-    globalTools &&
-    typeof(globalTools) === 'object'
-  ) {
-    return globalTools;
-  }
-  return {};
-};
 
 /**
  * Finds, parses, and returns the closest package.json
- * to the current working directory.
+ * to the current working directory, along with the eol
+ * and indentation found in the file.
  *
- * @return {object} The package.json as an object
+ * @return {MANIFESTDATA} The package.json as an object
  */
-export const getManifest = function () {
+export const getManifestData = function () {
   const manifestPath = findManifest();
+  const data = {
+    eol: undefined,
+    indentation: undefined,
+    manifest: undefined,
+    manifestPath
+  };
   if (!manifestPath) {
-    return {};
+    return data;
   }
-  let manifest;
   try {
-    let manifestData = readFileSync(manifestPath);
-    manifest = JSON.parse(manifestData);
+    let manifestData = String(readFileSync(manifestPath));
+    data.eol = determineEndOfLineCharacter(manifestData);
+    data.indentation = determineIndentation(manifestData);
+    data.manifest = JSON.parse(manifestData);
   } catch {
     // do nothing
   }
-  return manifest;
+  return data;
 };
+
+/* TODO: Bun can be in the runtime or packageManager section,
+ *       so theoretically they could have different numbers.
+ *       This should not be allowed, as a regular install of
+ *       bun would use the same version for both, and may
+ *       even have runtime code that expects the packageManager
+ *       side of bun to have specific API's or vice versa.
+ *       If bun is in both places, we should always force the
+ *       packageManager version to match the runtime.
+ */
+/* TODO: The runtime and packageManager fields can be an array
+ *       of objects, including duplicate values. We should
+ *       remove the duplicates when setting the devEngines
+ *       fields.
+ */
 
 /**
  * @typedef  {object} RAWVERSIONS
@@ -120,9 +128,9 @@ export const getManifest = function () {
  * @return {RAWVERSIONS} Simplified object of raw tool versions.
  */
 export const getRawToolVersions = function () {
-  const manifest = getManifest();
+  const { manifest } = getManifestData();
   let versions = {};
-  function setVersionForDevEngine (type) {
+  function getVersionFromDevEngines (type) {
     if (
       manifest?.devEngines &&
       manifest.devEngines[type]
@@ -130,18 +138,131 @@ export const getRawToolVersions = function () {
       if (Array.isArray(manifest.devEngines[type])) {
         manifest.devEngines[type].forEach((tool) => {
           if (tool?.name && tool?.version) {
-            versions[tool.name.toLowerCase()] = tool.version;
+            let toolName = tool.name.toLowerCase();
+            if (supportedTools.includes(toolName)) {
+              versions[toolName] = tool.version;
+            }
           }
         });
       } else if (
         manifest.devEngines[type].name &&
         manifest.devEngines[type].version
       ) {
-        versions[manifest.devEngines[type].name.toLowerCase()] = manifest.devEngines[type].version;
+        let toolName = manifest.devEngines[type].name.toLowerCase();
+        if (supportedTools.includes(toolName)) {
+          versions[toolName] = manifest.devEngines[type].version;
+        }
       }
     }
   }
-  setVersionForDevEngine('runtime');
-  setVersionForDevEngine('packageManager');
+  getVersionFromDevEngines('runtime');
+  getVersionFromDevEngines('packageManager');
   return versions;
+};
+
+/**
+ * @typedef  {object} RESOLVEDVERSIONS
+ * @property {string} [node]            The exact resolved Node.js version
+ * @property {string} [deno]            The exact resolved Deno version
+ * @property {string} [bun]             The exact resolved Bun version
+ * @property {string} [npm]             The exact resolved npm version
+ * @property {string} [pnpm]            The exact resolved pnpm version
+ * @property {string} [yarn]            The exact resolved Yarn version
+ */
+
+/**
+ * Returns an object of the exact resolved versions for each tool.
+ *
+ * @return {RESOLVEDVERSIONS} Exact resolved versions of all devEngine tools
+ */
+export const getResolvedToolVersions = async function () {
+  const rawVersions = getRawToolVersions();
+  const resolvedVersions = {};
+  for (const toolName in rawVersions) {
+    const rawVersion = rawVersions[toolName];
+    resolvedVersions[toolName] = await resolveToolVersion(toolName, rawVersion);
+  }
+  return resolvedVersions;
+};
+
+/** @typedef {'runtime'|'packageManager'} SUBSECTION */
+
+/**
+ * Sets the tool version in the manifest.
+ *
+ * @param {object}     manifest    The user's parsed package.json.
+ * @param {SUBSECTION} subSection  The sub-section to set in the devEngines
+ * @param {TOOL}       name        The desired tool to pin in devEngines
+ * @param {string}     version     The desired version to pin in devEngines
+ */
+export const mutateManifest = function (manifest, subSection, name, version) {
+  manifest.devEngines = manifest.devEngines || {};
+  manifest.devEngines[subSection] = manifest.devEngines[subSection] || {};
+  if (Array.isArray(manifest.devEngines[subSection])) {
+    const existingIndex = manifest.devEngines[subSection].findIndex((tool) => {
+      return tool.name === name;
+    });
+    if (existingIndex > -1) {
+      manifest.devEngines[subSection][existingIndex].version = version;
+    } else {
+      manifest.devEngines[subSection].push({ name, version });
+    }
+  } else if (
+    manifest.devEngines[subSection].name?.length &&
+    manifest.devEngines[subSection].name !== name
+  ) {
+    manifest.devEngines[subSection] = [
+      manifest.devEngines[subSection],
+      { name, version }
+    ];
+  } else {
+    manifest.devEngines[subSection] = { name, version };
+  }
+};
+
+/**
+ * Reads in the user's package.json, pins the desired tool version in the
+ * correct sub-section. Handles existing object or arrays.
+ *
+ * @param {SUBSECTION} subSection  The sub-section to set in the devEngines
+ * @param {TOOL}       name        The desired tool to pin in devEngines
+ * @param {string}     version     The desired version to pin in devEngines
+ */
+const setDevEnginesSubSection = function (subSection, name, version) {
+  const {
+    eol,
+    indentation,
+    manifest,
+    manifestPath
+  } = getManifestData();
+  if (!manifestPath || !manifest) {
+    console.log(
+      'Could not set ' + name + '@' + version +
+      ' in package.json:devEngines:' + subSection + '.'
+    );
+    return;
+  }
+  mutateManifest(manifest, subSection, name, version);
+  let mutatedManifest = JSON.stringify(manifest, null, indentation) + '\n';
+  mutatedManifest = mutatedManifest.replaceAll('\n', eol);
+  writeFileSync(manifestPath, mutatedManifest);
+};
+
+/**
+ * Sets a value in the devEngines field in the user's package.json.
+ *
+ * @param {TOOL}   tool     The desired tool to pin in devEngines
+ * @param {string} version  The desired version to pin in devEngines
+ */
+export const setToolInDevEngines = function (tool, version) {
+  // Because 'bun' can appear in both, they are non-exclusionary
+  if (supportedRuntimes.includes(tool)) {
+    setDevEnginesSubSection('runtime', tool, version);
+  }
+  if (supportedPackageManagers.includes(tool)) {
+    setDevEnginesSubSection('packageManager', tool, version);
+  }
+  if (!supportedTools.includes(tool)) {
+    console.log('Your version of devEngines CLI does not support "' + tool + '".');
+  }
 };

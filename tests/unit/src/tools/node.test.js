@@ -1,140 +1,217 @@
-// TODO: Mock out all network calls with dummy data
-// TODO: Mock out filesystem
-import {
-  existsSync,
-  readFileSync,
-  unlinkSync
-} from 'node:fs';
 import { join } from 'node:path';
 
 import axios from 'axios';
+import { fs, vol } from 'memfs';
 
-import node from '@/tools/node.js';
+import { files, folders } from '@/pathMap.js';
+import node, { createNodeDownloadUrl } from '@/tools/node.js';
 
+import { LATEST_NODE } from '@@/data/constants.js';
 import { error } from '@@/data/error.js';
+import {
+  makeCacheListFolder,
+  makeCachedNodeReleases,
+  mockNodeReleases
+} from '@@/unit/testHelpers.js';
 
-const __dirname = import.meta.dirname;
-const nodeVersionsPath = join(__dirname, '..', '..', '..', '..', 'cacheLists', 'nodeVersions.json');
-let allNodeVersions;
+let arch = 'x64';
+let platform = 'linux';
+
+vi.mock('node:fs', () => {
+  return fs;
+});
+vi.mock('node:os', () => {
+  return {
+    arch: vi.fn(() => {
+      return arch;
+    }),
+    platform: vi.fn(() => {
+      return platform;
+    })
+  };
+});
+vi.mock('axios', () => {
+  return {
+    default: {
+      get: vi.fn()
+    }
+  };
+});
+const mockedAxiosGet = vi.mocked(axios.get);
 
 describe('node.js', () => {
+  beforeEach(() => {
+    vi.resetAllMocks();
+    vol.reset();
+    makeCacheListFolder(vol);
+  });
+
+  describe('createNodeDownloadUrl', () => {
+    test('Creates Node.js download url for Linux', () => {
+      arch = 'x64';
+      platform = 'linux';
+
+      expect(createNodeDownloadUrl('22.22.2'))
+        .toEqual('https://nodejs.org/dist/v22.22.2/node-v22.22.2-linux-x64.tar.gz');
+    });
+
+    test('Creates Node.js download url for OSX', () => {
+      arch = 'arm64';
+      platform = 'darwin';
+
+      expect(createNodeDownloadUrl('22.22.2'))
+        .toEqual('https://nodejs.org/dist/v22.22.2/node-v22.22.2-darwin-arm64.tar.gz');
+    });
+
+    test('Creates Node.js download url for Windows', () => {
+      arch = 'x64';
+      platform = 'win32';
+
+      expect(createNodeDownloadUrl('22.22.2'))
+        .toEqual('https://nodejs.org/dist/v22.22.2/node-v22.22.2-win-x64.zip');
+    });
+  });
+
+  describe('download', () => {
+    const version = '22.22.2';
+
+    test('Logs stub', () => {
+      node.download(version);
+
+      expect(console.log)
+        .toHaveBeenCalledWith('STUB: download');
+    });
+
+    test('Returns early if download not needed', () => {
+      vol.mkdirSync(join(folders.nodeInstalls, version), { recursive: true });
+
+      node.download(version);
+
+      expect(console.log)
+        .not.toHaveBeenCalled();
+    });
+  });
+
   describe('getLatestReleases', () => {
     test('Network call fails', async () => {
-      const axiosGet = axios.get;
-      axios.get = vi.fn(() => Promise.reject(error));
+      const contents = makeCachedNodeReleases(vol);
+      mockedAxiosGet.mockRejectedValue(error);
 
-      if (existsSync(nodeVersionsPath)) {
-        allNodeVersions = JSON.parse(readFileSync(nodeVersionsPath));
-      }
       const releases = await node.getLatestReleases();
 
-      expect(releases.data.length > 100)
-        .toEqual(true);
+      expect(mockedAxiosGet)
+        .toHaveBeenCalledTimes(1);
 
-      expect(releases.data.length)
-        .toEqual(allNodeVersions.data.length);
+      expect(releases)
+        .toEqual(contents);
 
       expect(console.log)
         .toHaveBeenCalledWith('Error checking for latest Node releases');
 
       expect(console.log)
         .toHaveBeenCalledWith(error);
-
-      axios.get = axiosGet;
     });
 
-    test('Updates the nodeVersions.json file', async () => {
-      if (existsSync(nodeVersionsPath)) {
-        unlinkSync(nodeVersionsPath);
-      }
+    test('Fetches once then uses cache', async () => {
+      makeCachedNodeReleases(vol);
+      const releases = mockNodeReleases(mockedAxiosGet);
+      const run1 = await node.getLatestReleases();
+      const run2 = await node.getLatestReleases();
+      const cache = JSON.parse(fs.readFileSync(files.cachedNodeVersions, 'utf8'));
 
-      const releases = await node.getLatestReleases();
+      expect(mockedAxiosGet)
+        .toHaveBeenCalledTimes(1);
 
-      expect(readFileSync(nodeVersionsPath).length > 100)
-        .toEqual(true);
+      expect(run1.data)
+        .toEqual(releases);
 
-      expect(releases.data.length > 100)
-        .toEqual(true);
+      expect(run1)
+        .toEqual(cache);
 
-      expect(releases.data.length)
-        .toEqual(allNodeVersions.data.length);
+      expect(run1)
+        .toEqual(run2);
 
       expect(console.log)
         .not.toHaveBeenCalled();
-    });
-
-    test('Running twice in a row skips the network call', async () => {
-      const axiosGet = axios.get;
-      axios.get = vi.fn();
-
-      await node.getLatestReleases();
-
-      expect(axios.get)
-        .not.toHaveBeenCalled();
-
-      axios.get = axiosGet;
     });
   });
 
   describe('getCachedReleases', () => {
     test('Loads contents', () => {
-      if (existsSync(nodeVersionsPath)) {
-        allNodeVersions = JSON.parse(readFileSync(nodeVersionsPath));
-      }
+      const contents = makeCachedNodeReleases(vol);
 
-      expect(node.getCachedReleases().data)
-        .toEqual(allNodeVersions.data);
+      expect(node.getCachedReleases())
+        .toEqual(contents);
+    });
+  });
+
+  describe('isVersionInstalled', () => {
+    const version = '22.22.2';
+
+    test('Location does not exist', () => {
+      expect(node.isVersionInstalled(version))
+        .toEqual(false);
+    });
+
+    test('Location does exist', () => {
+      vol.mkdirSync(join(folders.nodeInstalls, version), { recursive: true });
+
+      expect(node.isVersionInstalled(version))
+        .toEqual(true);
     });
   });
 
   describe('resolveVersion', () => {
-    const axiosGet = axios.get;
-
-    beforeEach(() => {
-      axios.get = vi.fn(() => Promise.reject(error));
-    });
-
-    afterEach(() => {
-      axios.get = axiosGet;
-    });
-
-    test('Returns the value if it is already exact', async () => {
-      const result = await node.resolveVersion('22.0.0');
+    test('Resolves semver exact versions', async () => {
+      makeCachedNodeReleases(vol);
+      const exact = '22.0.0';
+      const result = await node.resolveVersion(exact);
 
       expect(result)
-        .toEqual('22.0.0');
+        .toEqual(exact);
     });
 
-    test('Returns the latest Node version', async () => {
+    test('Resolves "latest"', async () => {
+      makeCachedNodeReleases(vol);
       const result = await node.resolveVersion('latest');
 
       expect(result)
-        .toMatchInlineSnapshot('"25.6.1"');
+        .toEqual(LATEST_NODE);
     });
 
-    test('Returns the LTS Node version', async () => {
+    test('Resolves "lts"', async () => {
+      makeCachedNodeReleases(vol);
       const result = await node.resolveVersion('lts');
 
       expect(result)
-        .toMatchInlineSnapshot('"24.13.1"');
+        .toEqual('24.14.0');
     });
 
-    test('Returns the latest Node version 22', async () => {
-      const result = await node.resolveVersion('22.x.x');
+    test('Resolves semver x-ranges', async () => {
+      makeCachedNodeReleases(vol);
+      const result = await node.resolveVersion('25.x.x');
 
       expect(result)
-        .toMatchInlineSnapshot('"22.22.0"');
+        .toEqual(LATEST_NODE);
     });
 
-    test('Console logs error if Node version cannot be satisfied', async () => {
-      await node.resolveVersion('9001.x.x');
+    test('Logs an error if version cannot be resolved', async () => {
+      makeCachedNodeReleases(vol);
+      const result = await node.resolveVersion('9001.x.x');
+
+      expect(result)
+        .toEqual(undefined);
 
       expect(console.log)
         .toHaveBeenCalledWith('Desired Node version cannot be found.');
     });
 
-    test('Console logs error for invalid Node version', async () => {
-      await node.resolveVersion('asdf');
+    test('Logs an error if version is invalid', async () => {
+      makeCachedNodeReleases(vol);
+      const result = await node.resolveVersion('asdf');
+
+      expect(result)
+        .toEqual(undefined);
 
       expect(console.log)
         .toHaveBeenCalledWith('Desired Node version cannot be found.');
