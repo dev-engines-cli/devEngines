@@ -3,9 +3,12 @@
  */
 
 import { execSync } from 'node:child_process';
-import fs from 'node:fs';
-import os from 'node:os';
-import path from 'node:path';
+import {
+  existsSync,
+  readFileSync
+} from 'node:fs';
+import { homedir } from 'node:os';
+import { join } from 'node:path';
 import { cwd } from 'node:process';
 
 import { logger } from './logger.js';
@@ -15,7 +18,7 @@ import { logger } from './logger.js';
 /** @type {STATE} */
 const state = {
   cwd: cwd(),
-  homeDirectory: undefined,
+  homeDirectory: homedir(),
   dotDevEnginesPath: undefined,
   devEnginesCliManifestPath: undefined,
   manifestExists: false,
@@ -28,21 +31,22 @@ const state = {
  *
  * @return {STATE} The initialized state object
  */
-export const initializeState = async function () {
-  state.homeDirectory = os.homedir();
-  state.dotDevEnginesPath = path.join(state.homeDirectory, '.devEngines');
-  state.devEnginesCliManifestPath = path.join(state.dotDevEnginesPath, 'package.json');
+export const initializeState = function () {
+  state.dotDevEnginesPath = join(state.homeDirectory, '.devEngines');
+  state.devEnginesCliManifestPath = join(state.dotDevEnginesPath, 'package.json');
 
   try {
-    state.manifestExists = fs.existsSync(state.devEnginesCliManifestPath);
+    state.manifestExists = existsSync(state.devEnginesCliManifestPath);
   } catch {
+    /* v8 ignore next */
     logger('Error checking existence of local devEngines CLI');
   }
 
   if (state.manifestExists) {
     try {
-      state.existingVersion = JSON.parse(fs.readFileSync(state.devEnginesCliManifestPath)).version;
+      state.existingVersion = JSON.parse(readFileSync(state.devEnginesCliManifestPath)).version;
     } catch {
+      /* v8 ignore next */
       logger('Error checking version of existing devEngines CLI');
     }
   }
@@ -51,6 +55,7 @@ export const initializeState = async function () {
     const gitVersion = String(execSync('git --version'));
     state.gitInstalled = gitVersion.startsWith('git version');
   } catch {
+    /* v8 ignore next */
     logger('Could not find local git installation');
   }
 

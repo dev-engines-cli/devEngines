@@ -1,10 +1,5 @@
 import { execSync } from 'node:child_process';
 
-import {
-  LATEST_NODE
-  // LATEST_NPM
-} from '@@/data/constants.js';
-
 describe('shims.js', () => {
   test('Run node -v', () => {
     let stdout;
@@ -16,7 +11,7 @@ describe('shims.js', () => {
 
     expect(stdout)
       .toEqual([
-        'Download and install: node@' + LATEST_NODE,
+        'Download and install: node@25.8.2',
         '[ \'-v\' ]'
       ].join('\n'));
   });
@@ -31,7 +26,7 @@ describe('shims.js', () => {
 
     expect(stdout)
       .toEqual([
-        'Download and install: npm@11.11.0',
+        'Download and install: npm@11.11.1',
         '[ \'-v\' ]'
       ].join('\n'));
   });

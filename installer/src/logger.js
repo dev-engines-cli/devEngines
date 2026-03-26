@@ -2,8 +2,6 @@
  * @file Centralized logging function.
  */
 
-import console from 'node:console';
-
 /**
  * Centralized logging function.
  *

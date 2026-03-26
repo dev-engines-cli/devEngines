@@ -3,7 +3,6 @@
  */
 
 import { execSync } from 'node:child_process';
-import console from 'node:console';
 import { chdir } from 'node:process';
 
 import { select } from '@clack/prompts';

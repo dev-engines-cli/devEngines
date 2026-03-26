@@ -13,7 +13,7 @@ import { initializeState } from './state.js';
 const run = async function () {
   console.log(logo);
 
-  const state = await initializeState();
+  const state = initializeState();
   // Remove later
   console.log({ state });
 
