@@ -7,6 +7,19 @@ import { join } from 'node:path';
 // Folders
 const root = join(import.meta.dirname, '..');
 const cacheLists = join(root, 'cacheLists');
+const localNode = join(root, 'localNode');
+const tools = join(root, 'tools');
+const nodeInstalls = join(tools, 'node');
+const npmInstalls = join(tools, 'npm');
+
+export const folders = {
+  cacheLists,
+  localNode,
+  nodeInstalls,
+  npmInstalls,
+  root,
+  tools
+};
 
 // Files
 const cachedNpmVersions = join(cacheLists, 'npmVersions.json');

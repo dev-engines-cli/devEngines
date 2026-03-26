@@ -3,8 +3,18 @@
  *       resolve a given Node version to an exact version.
  */
 
-import { writeFileSync } from 'node:fs';
-import { dirname } from 'node:path';
+import {
+  existsSync,
+  writeFileSync
+} from 'node:fs';
+import {
+  arch,
+  platform
+} from 'node:os';
+import {
+  dirname,
+  join
+} from 'node:path';
 
 import axios from 'axios';
 import {
@@ -19,7 +29,7 @@ import {
   ensureFolderExists,
   loadJsonFile
 } from '../helpers.js';
-import { files } from '../pathMap.js';
+import { files, folders } from '../pathMap.js';
 
 /**
  * @typedef  {object}   NODERELEASE
@@ -134,7 +144,79 @@ const resolveVersion = async function (version) {
   return undefined;
 };
 
+/**
+ * Check if a given version is already downloaded.
+ *
+ * @param  {string}  version  Node version to check for
+ * @return {boolean}          true = exists
+ */
+const isVersionInstalled = function (version) {
+  let exists = false;
+  try {
+    // TODO: Add in a more comprehensive check
+    exists = existsSync(join(folders.nodeInstalls, version));
+  } catch {
+    /* v8 ignore next */
+    console.log('Error checking Node install path');
+  }
+  return exists;
+};
+
+/**
+ * Creates the Node.js download URL based on the OS, Arch, and Node version.
+ *
+ * @example
+ * https://nodejs.org/dist/v25.0.0/node-v25.0.0-darwin-arm64.tar.gz
+ * https://nodejs.org/dist/v25.0.0/node-v25.0.0-linux-x64.tar.gz
+ * https://nodejs.org/dist/v25.0.0/node-v25.0.0-win-x64.zip
+ *
+ * @param  {string} version  The exact resolved version of Node to download
+ * @return {string}          The URL to download that version of Node for the current OS
+ */
+export const createNodeDownloadUrl = function (version) {
+  let osForUrl = platform();
+  let extension = 'tar.gz';
+
+  if (osForUrl === 'win32') {
+    osForUrl = 'win';
+    extension = 'zip';
+  }
+  const fileName = [
+    'node',
+    'v' + version,
+    osForUrl,
+    arch()
+  ].join('-');
+  const file = fileName + '.' + extension;
+
+  const url = [
+    'https://nodejs.org',
+    'dist',
+    'v' + version,
+    file
+  ].join('/');
+
+  return url;
+};
+
+/**
+ * TODO: Download Node version.
+ *
+ * @param {string} version  Node version to download
+ */
+const download = function (version) {
+  if (isVersionInstalled(version)) {
+    return;
+  }
+
+  // const url = createNodeDownloadUrl(version);
+
+  console.log('STUB: download');
+};
+
 export default {
+  download,
+  isVersionInstalled,
   getCachedReleases,
   getLatestReleases,
   resolveVersion
