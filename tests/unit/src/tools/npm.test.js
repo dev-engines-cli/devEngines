@@ -1,7 +1,9 @@
+import { join } from 'node:path';
+
 import axios from 'axios';
 import { fs, vol } from 'memfs';
 
-import { files } from '@/pathMap.js';
+import { files, folders } from '@/pathMap.js';
 import npm from '@/tools/npm.js';
 
 import { LATEST_NPM } from '@@/data/constants.js';
@@ -29,6 +31,26 @@ describe('npm.js', () => {
     vi.resetAllMocks();
     vol.reset();
     makeCacheListFolder(vol);
+  });
+
+  describe('download', () => {
+    const version = '11.0.0';
+
+    test('Logs stub', () => {
+      npm.download(version);
+
+      expect(console.log)
+        .toHaveBeenCalledWith('STUB: download');
+    });
+
+    test('Returns early if download not needed', () => {
+      vol.mkdirSync(join(folders.npmInstalls, version), { recursive: true });
+
+      npm.download(version);
+
+      expect(console.log)
+        .not.toHaveBeenCalled();
+    });
   });
 
   describe('getLatestReleases', () => {
@@ -62,6 +84,22 @@ describe('npm.js', () => {
 
       expect(npm.getCachedReleases())
         .toEqual(contents);
+    });
+  });
+
+  describe('isVersionInstalled', () => {
+    const version = '11.0.0';
+
+    test('Location does not exist', () => {
+      expect(npm.isVersionInstalled(version))
+        .toEqual(false);
+    });
+
+    test('Location does exist', () => {
+      vol.mkdirSync(join(folders.npmInstalls, version), { recursive: true });
+
+      expect(npm.isVersionInstalled(version))
+        .toEqual(true);
     });
   });
 

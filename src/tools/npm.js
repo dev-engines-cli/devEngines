@@ -3,8 +3,14 @@
  *       resolve a given npm version to an exact version.
  */
 
-import { writeFileSync } from 'node:fs';
-import { dirname } from 'node:path';
+import {
+  existsSync,
+  writeFileSync
+} from 'node:fs';
+import {
+  dirname,
+  join
+} from 'node:path';
 
 import axios from 'axios';
 import {
@@ -19,7 +25,7 @@ import {
   ensureFolderExists,
   loadJsonFile
 } from '../helpers.js';
-import { files } from '../pathMap.js';
+import { files, folders } from '../pathMap.js';
 
 /**
  * @typedef  {object}   NPMRELEASES
@@ -128,7 +134,39 @@ const resolveVersion = async function (desiredVersion) {
   return undefined;
 };
 
+/**
+ * Check if a given version is already downloaded.
+ *
+ * @param  {string}  version  npm version to check for
+ * @return {boolean}          true = exists
+ */
+const isVersionInstalled = function (version) {
+  let exists = false;
+  try {
+    // TODO: Add in a more comprehensive check
+    exists = existsSync(join(folders.npmInstalls, version));
+  } catch {
+    /* v8 ignore next */
+    console.log('Error checking npm install path');
+  }
+  return exists;
+};
+
+/**
+ * TODO: Download npm version.
+ *
+ * @param {string} version  npm version to download
+ */
+const download = function (version) {
+  if (isVersionInstalled(version)) {
+    return;
+  }
+  console.log('STUB: download');
+};
+
 export default {
+  download,
+  isVersionInstalled,
   getCachedReleases,
   getLatestReleases,
   resolveVersion
