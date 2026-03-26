@@ -7,7 +7,7 @@
     "start": "node index.js",
     "test": "vitest run --coverage",
     "unit": "vitest --coverage",
-    "lint": "eslint *.js bootstrap src tests",
+    "lint": "eslint *.js src tests",
     "fix": "npm run lint -- --fix",
     "update-lists": "node ./scripts/updateCacheLists.js",
     "outdated": "npm outdated"
