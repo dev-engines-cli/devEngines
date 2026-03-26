@@ -174,13 +174,10 @@ const isVersionInstalled = function (version) {
  * @return {string}          The URL to download that version of Node for the current OS
  */
 export const createNodeDownloadUrl = function (version) {
-  const os = platform();
-  const architecture = arch();
-
-  let osForUrl = os;
+  let osForUrl = platform();
   let extension = 'tar.gz';
 
-  if (os === 'win32') {
+  if (osForUrl === 'win32') {
     osForUrl = 'win';
     extension = 'zip';
   }
@@ -188,7 +185,7 @@ export const createNodeDownloadUrl = function (version) {
     'node',
     'v' + version,
     osForUrl,
-    architecture
+    arch()
   ].join('-');
   const file = fileName + '.' + extension;
 
