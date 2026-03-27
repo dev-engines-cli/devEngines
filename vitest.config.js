@@ -11,8 +11,7 @@ const config = defineConfig({
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
-      '@@': fileURLToPath(new URL('./tests', import.meta.url)),
-      '@@@': fileURLToPath(new URL('./installer', import.meta.url))
+      '@@': fileURLToPath(new URL('./tests', import.meta.url))
     }
   },
   test: {
@@ -22,7 +21,6 @@ const config = defineConfig({
         './src/types.js'
       ],
       include: [
-        './installer/**/*.js',
         './src/**/*'
       ],
       reportsDirectory: './tests/unit/coverage'
