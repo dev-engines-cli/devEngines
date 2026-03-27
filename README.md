@@ -118,51 +118,24 @@ JavaScript tooling management.
 
 Tracking the project's progress.
 
-* [ ] Installer:
-  * [x] Evaluate different tech stacks
-    * [x] Bun Build <-- winner
-    * [x] Node SEA
-    * [x] Deno compile
-    * [x] ~Neutralino~
-    * [x] ~Batch/SH~
-    * [x] ~NW.js~
-  * [x] Automated GHA builds for all platforms
-  * [ ] 100% test coverage (`/tests/unit/installer/*` not created yet)
-  * [ ] Handle existing installs of devEngines CLI
-    * [x] keep
-    * [x] upgrade
-    * [ ] delete
-    * [ ] uninstall
-  * [ ] Offer download Options:
-    * [ ] git clone HTTPS
-    * [ ] git clone SSH
-    * [ ] GitHub CLI
-    * [ ] https zip download options
-  * [ ] Clone repo or Download+Unzip
-  * [ ] Download/unzip correct Node version for the CLI
-  * [ ] Run `npm i`
-  * [ ] Add to PATH
-  * [ ] Remove from PATH (for uninstalls)
-  * [ ] Installation documentation
-* [ ] CLI
-  * [x] Maintain 100% test coverage
-  * [x] Output version number
-  * [x] Show help menu
-  * [x] Pin the node or npm version locally
-    * [x] Download/cache list of available versions
-    * [x] Resolve version
-    * [x] Find manifest
-      * [ ] Handle monorepos
-    * [x] Update manifest devEngines
-    * [x] Get list of tools and their versions from devEngines
-  * [ ] Create Node/npm shims
-    * [ ] node
-    * [ ] npm
-    * [ ] npx
-    * [ ] node-gyp
-  * [ ] Download/unzip correct Node/npm versions
-  * [ ] Run original command with arguments through the shim
-  * [ ] Purge tool downloads (`devEngines purge`)
+* [x] Maintain 100% test coverage
+* [x] Output version number
+* [x] Show help menu
+* [x] Pin the node or npm version locally
+  * [x] Download/cache list of available versions
+  * [x] Resolve version
+  * [x] Find manifest
+    * [ ] Handle monorepos
+  * [x] Update manifest devEngines
+  * [x] Get list of tools and their versions from devEngines
+* [ ] Create Node/npm shims
+  * [ ] node
+  * [ ] npm
+  * [ ] npx
+  * [ ] node-gyp
+* [ ] Download/unzip correct Node/npm versions
+* [ ] Run original command with arguments through the shim
+* [ ] Purge tool downloads (`devEngines purge`)
 
 
 * * *
