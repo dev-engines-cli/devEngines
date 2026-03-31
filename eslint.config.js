@@ -8,7 +8,7 @@ import path from 'node:path';
 
 import pluginJs from '@eslint/js';
 import tjwBase from 'eslint-config-tjw-base';
-import tjwImport from 'eslint-config-tjw-import';
+import tjwImport from 'eslint-config-tjw-import-x';
 import tjwJest from 'eslint-config-tjw-jest';
 import tjwJsdoc from 'eslint-config-tjw-jsdoc';
 import pluginImport from 'eslint-plugin-import';
