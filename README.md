@@ -63,18 +63,18 @@ JavaScript tooling management.
   * `devEngines --help`
 
 
-## Installation:
+## Manual Installation:
 
 1. Before installation, remove Node and npm if they are globally installed. Also remove any existing Node version management tools (nvm, n, nodist, nvm-windows, volta, proto, etc).
 1. In a command prompt or terminal change to the user profile home directory:
    * **Windows:** `cd %USERPROFILE%`
    * **Linux/OSX:** `cd ~`
 1. Clone the repo with one of these commands:
-   * **HTTPS:** `git clone https://github.com/TheJaredWilcurt/devEngines.git`
-   * **SSH:** `git@github.com:TheJaredWilcurt/devEngines.git`
-   * **GitHub CLI:** `gh repo clone TheJaredWilcurt/devEngines`
+   * **HTTPS:** `git clone https://github.com/dev-engines-cli/devEngines.git .devEngines`
+   * **SSH:** `git clone git@github.com:dev-engines-cli/devEngines.git .devEngines`
+   * **GitHub CLI:** `gh repo clone dev-engines-cli/devEngines .devEngines`
 1. Change directory into the cloned repo:
-   * `cd devEngines`
+   * `cd .devEngines`
 1. Install
    * **Windows:** `install.bat`
    * **Linux/OSX:** `./install.sh`
