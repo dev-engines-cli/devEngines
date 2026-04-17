@@ -4,7 +4,7 @@
 
 import { fileURLToPath, URL } from 'node:url';
 
-/* eslint-disable-next-line import/extensions,import/no-unresolved */
+/* eslint-disable-next-line import-x/extensions,import-x/no-unresolved */
 import { defineConfig } from 'vitest/config';
 
 const config = defineConfig({
@@ -33,5 +33,4 @@ const config = defineConfig({
   }
 });
 
-/* eslint-disable-next-line import/no-unused-modules */
 export default config;
