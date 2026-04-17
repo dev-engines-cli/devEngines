@@ -1,4 +1,4 @@
-/* eslint-disable import/no-extraneous-dependencies */
+/* eslint-disable import-x/no-extraneous-dependencies */
 
 /**
  * @file ESLint config
@@ -8,10 +8,10 @@ import path from 'node:path';
 
 import pluginJs from '@eslint/js';
 import tjwBase from 'eslint-config-tjw-base';
-import tjwImport from 'eslint-config-tjw-import';
+import tjwImport from 'eslint-config-tjw-import-x';
 import tjwJest from 'eslint-config-tjw-jest';
 import tjwJsdoc from 'eslint-config-tjw-jsdoc';
-import pluginImport from 'eslint-plugin-import';
+import pluginImport from 'eslint-plugin-import-x';
 import pluginJest from 'eslint-plugin-jest';
 
 const __dirname = import.meta.dirname;
@@ -38,7 +38,7 @@ const config = [
       'jest/no-deprecated-functions': 'off'
     },
     settings: {
-      'import/resolver': {
+      'import-x/resolver': {
         vite: {
           viteConfig: {
             resolve: {
@@ -63,5 +63,4 @@ const config = [
   }
 ];
 
-/* eslint-disable-next-line import/no-unused-modules */
 export default config;

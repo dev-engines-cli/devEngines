@@ -11,7 +11,7 @@ describe('shims.js', () => {
 
     expect(stdout)
       .toEqual([
-        'Download and install: node@25.8.2',
+        'Download and install: node@25.9.0',
         '[ \'-v\' ]'
       ].join('\n'));
   });
@@ -26,7 +26,7 @@ describe('shims.js', () => {
 
     expect(stdout)
       .toEqual([
-        'Download and install: npm@11.11.1',
+        'Download and install: npm@11.12.1',
         '[ \'-v\' ]'
       ].join('\n'));
   });
