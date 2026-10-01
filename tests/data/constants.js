@@ -6,7 +6,7 @@ export const CLI_VERSION = 'v0.0.1';
 
 export const HELP_MENU = [
   'devEngines CLI ' + CLI_VERSION,
-  'Node and npm version switching and pinning',
+  'Node and npm version switching and pinning.',
   '',
   'Updating all versions in the local package.json',
   '  devEngines lts',
