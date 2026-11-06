@@ -12,7 +12,7 @@ import { getCliVersion } from './cliVersion.js';
 export const showHelpMenu = function () {
   console.log([
     'devEngines CLI ' + getCliVersion(),
-    'Node and npm version switching and pinning',
+    'Node and npm version switching and pinning.',
     '',
     'Updating all versions in the local package.json',
     '  devEngines lts',

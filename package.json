@@ -1,5 +1,5 @@
 {
-  "name": "dev-engines",
+  "name": "devengines",
   "type": "module",
   "version": "0.0.1",
   "main": "index.js",
@@ -14,26 +14,26 @@
   },
   "dependencies": {
     "@guoyunhe/downloader": "^1.5.0",
-    "axios": "^1.15.0",
+    "axios": "^1.21.0",
     "progress-bar-capture": "^1.0.0",
-    "semver": "^7.7.4"
+    "semver": "^7.8.5"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@stylistic/eslint-plugin": "^5.10.0",
-    "@vitest/coverage-v8": "^4.1.4",
-    "eslint": "^10.2.0",
-    "eslint-config-tjw-base": "^4.4.0",
+    "@vitest/coverage-v8": "^5.1.0",
+    "eslint": "^10.13.0",
+    "eslint-config-tjw-base": "^5.0.0",
     "eslint-config-tjw-import-x": "^1.0.1",
     "eslint-config-tjw-jest": "^4.0.0",
     "eslint-config-tjw-jsdoc": "^2.0.1",
-    "eslint-import-resolver-vite": "^2.1.1",
-    "eslint-plugin-import-x": "^4.16.2",
-    "eslint-plugin-jest": "^29.15.2",
-    "eslint-plugin-jsdoc": "^62.9.0",
-    "globals": "^17.5.0",
-    "memfs": "^4.57.2",
-    "vitest": "^4.1.4"
+    "eslint-import-resolver-vite": "^2.2.0",
+    "eslint-plugin-import-x": "^4.17.1",
+    "eslint-plugin-jest": "^29.17.0",
+    "eslint-plugin-jsdoc": "^65.4.2",
+    "globals": "^17.14.0",
+    "memfs": "^4.79.0",
+    "vitest": "^5.1.0"
   },
   "repository": {
     "type": "git",
@@ -45,14 +45,17 @@
     "url": "https://github.com/TheJaredWilcurt/devEngines/issues"
   },
   "homepage": "https://github.com/TheJaredWilcurt/devEngines#readme",
+  "allowScripts": {
+    "unrs-resolver@1.12.2": true
+  },
   "devEngines": {
     "runtime": {
       "name": "node",
-      "version": "25.9.0"
+      "version": "26.13.0"
     },
     "packageManager": {
       "name": "npm",
-      "version": "11.12.1"
+      "version": "12.2.2"
     }
   }
 }
