@@ -10,10 +10,10 @@ describe('shims.js', () => {
     }
 
     expect(stdout)
-      .toEqual([
-        'Download and install: node@26.10.0',
-        '[ \'-v\' ]'
-      ].join('\n'));
+      .toMatchInlineSnapshot(`
+        "Download and install: node@26.13.0
+        [ '-v' ]"
+      `);
   });
 
   test('Run npm -v', () => {
@@ -25,9 +25,9 @@ describe('shims.js', () => {
     }
 
     expect(stdout)
-      .toEqual([
-        'Download and install: npm@12.2.0',
-        '[ \'-v\' ]'
-      ].join('\n'));
+      .toMatchInlineSnapshot(`
+        "Download and install: npm@12.2.2
+        [ '-v' ]"
+      `);
   });
 });
